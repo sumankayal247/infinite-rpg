@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infinite RPG</title>
+    <link rel="stylesheet" href="src/style.css">
+</head>
+<body>
+    <div id="game-container">
+        <header>
+            <h1>Infinite RPG</h1>
+            <div id="stats">
+                <span>HP: <span id="hp-val">100</span></span>
+                <span>Level: <span id="lvl-val">1</span></span>
+                <span>XP: <span id="xp-val">0</span></span>
+            </div>
+        </header>
+        
+        <main id="game-view">
+            <!-- Game content like map or text logs will go here -->
+            <div id="log">Welcome to Infinite RPG! Your journey begins...</div>
+        </main>
+        
+        <footer id="controls">
+            <button id="btn-explore">Explore</button>
+            <button id="btn-inventory">Inventory</button>
+        </footer>
+    </div>
+
+    <script src="src/app.js"></script>
+</body>
+</html>

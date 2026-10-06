@@ -5,9 +5,9 @@ Infinite RPG is a procedural role-playing game designed to offer endless explora
 
 ## Phases
 
-### Phase 1: Environment and Boilerplate (Current)
+### Phase 1: Environment and Boilerplate (Completed)
 - Initialize Git repository.
-- Set up the basic project structure and environment.
+- Set up the basic browser project structure (HTML, CSS, JS).
 - Create initial documentation (`infinite-rpg.md`).
 - Initial commit and push.
 
