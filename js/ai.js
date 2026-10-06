@@ -4,6 +4,7 @@
  */
 
 import { getTelemetry } from './save.js';
+import { sanitizePlayerInput } from './security.js';
 
 let fallbackData = null;
 let prefetchCache = {}; // Cache for Speculative Pre-fetching
@@ -24,7 +25,10 @@ export async function generateEncounter(playerHp, playerStr, playerLevel, biome)
         return getRandomFallback();
     }
 
-    const prompt = `Context: HP:${playerHp}, STR:${playerStr}, Level:${playerLevel}, Biome:${biome}. Task: Generate an encounter. Respond ONLY in valid JSON format: {"name": "string", "desc": "string", "visual_theme": "string", "is_hostile": boolean}`;
+    // Phase 6: Prompt Injection Protection
+    const safeBiome = sanitizePlayerInput(biome);
+
+    const prompt = `Context: HP:${playerHp}, STR:${playerStr}, Level:${playerLevel}, Biome:${safeBiome}. Task: Generate an encounter. Respond ONLY in valid JSON format: {"name": "string", "desc": "string", "visual_theme": "string", "is_hostile": boolean}`;
 
     try {
         const response = await puter.ai.chat(prompt);
