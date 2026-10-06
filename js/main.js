@@ -1,4 +1,5 @@
 import * as Engine from './engine.js';
+import * as AI from './ai.js';
 
 // Phaser Game Configuration
 const config = {
@@ -24,6 +25,9 @@ const game = new Phaser.Game(config);
 function preload() {
     // Preload assets here later (AVIF, SVG, Opus)
     console.log("Phaser Preload: Initialized");
+    
+    // Load AI graceful degradation fallback data
+    AI.loadFallbackData();
 }
 
 async function create() {
