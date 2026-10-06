@@ -4,30 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Infinite RPG</title>
-    <link rel="stylesheet" href="src/style.css">
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/styles.css">
+    
+    <!-- Libraries -->
+    <script src="https://js.puter.com/v2/"></script>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.js"></script>
 </head>
 <body>
-    <div id="game-container">
-        <header>
-            <h1>Infinite RPG</h1>
-            <div id="stats">
-                <span>HP: <span id="hp-val">100</span></span>
-                <span>Level: <span id="lvl-val">1</span></span>
-                <span>XP: <span id="xp-val">0</span></span>
-            </div>
-        </header>
-        
-        <main id="game-view">
-            <!-- Game content like map or text logs will go here -->
-            <div id="log">Welcome to Infinite RPG! Your journey begins...</div>
-        </main>
-        
-        <footer id="controls">
-            <button id="btn-explore">Explore</button>
-            <button id="btn-inventory">Inventory</button>
-        </footer>
+    <div id="game-wrapper">
+        <div id="phaser-container"></div>
+        <aside id="stats-panel">
+            <h2>Player Stats</h2>
+            <!-- Stats will be injected here -->
+        </aside>
+        <section id="chat-log">
+            <!-- AI narrative goes here -->
+        </section>
     </div>
 
-    <script src="src/app.js"></script>
+    <!-- Game Scripts -->
+    <script type="module" src="js/main.js"></script>
 </body>
 </html>
