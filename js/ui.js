@@ -43,9 +43,6 @@ export function renderEnemyEncounter(scene, aiResponseJSON) {
         backgroundColor: '#000000'
     }).setOrigin(0.5);
 
-    // Update DOM Chat Log
-    updateChatLog(`Encountered: ${aiResponseJSON.name} - ${aiResponseJSON.desc}`);
-
     return sprite;
 }
 
