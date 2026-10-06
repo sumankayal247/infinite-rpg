@@ -1,3 +1,5 @@
+import * as Engine from './engine.js';
+
 // Phaser Game Configuration
 const config = {
     type: Phaser.AUTO,
@@ -24,8 +26,7 @@ function preload() {
     console.log("Phaser Preload: Initialized");
 }
 
-function create() {
-    // Basic text to confirm Phaser is working
+async function create() {
     this.add.text(400, 300, 'Infinite RPG Engine Initialized', { 
         fontFamily: 'Courier', 
         fontSize: '24px', 
@@ -33,6 +34,20 @@ function create() {
     }).setOrigin(0.5);
     
     console.log("Phaser Create: Ready");
+
+    // Phase 1 Test: Load data and test engine
+    try {
+        const playerData = await Engine.fetchGameData('player_base.json');
+        console.log("Base Player Data Loaded:", playerData);
+        
+        const derived = Engine.deriveStats(playerData.base_stats, [{stats: {attack: 5}}]);
+        console.log("Derived Stats (with +5 ATK sword):", derived);
+
+        const damageRoll = Engine.calculateDamage(derived, {defense: 10});
+        console.log("Test Damage Roll vs 10 DEF:", damageRoll);
+    } catch (e) {
+        console.error("Engine test failed:", e);
+    }
 }
 
 function update() {
