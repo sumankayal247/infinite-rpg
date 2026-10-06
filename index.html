@@ -12,12 +12,29 @@
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.js"></script>
 </head>
 <body>
+    <!-- Mobile Hamburger Menu -->
+    <button id="hamburger-menu" aria-label="Open Stats Menu">☰</button>
+
     <div id="game-wrapper">
         <div id="phaser-container"></div>
+        
         <aside id="stats-panel">
             <h2>Player Stats</h2>
             <!-- Stats will be injected here -->
+            <div id="action-buttons">
+                <button class="action-btn">Attack</button>
+                <button class="action-btn">Flee</button>
+            </div>
+            
+            <!-- Accessibility Options -->
+            <div id="a11y-controls">
+                <h3>Settings</h3>
+                <label><input type="checkbox" id="toggle-crt" checked> CRT Scanlines</label><br>
+                <label><input type="checkbox" id="toggle-text-scale"> Large Text</label><br>
+                <label><input type="checkbox" id="toggle-slow-type" checked> Slow Typing</label>
+            </div>
         </aside>
+        
         <section id="chat-log">
             <!-- AI narrative goes here -->
         </section>

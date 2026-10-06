@@ -33,6 +33,9 @@ function preload() {
     // Phase 4: Preload Assets & Audio
     UI.preloadAssets(this);
     AudioSys.preloadAudio(this);
+    
+    // Phase 5: Setup UI Hooks
+    UI.setupUIHooks();
 }
 
 async function create() {

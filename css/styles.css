@@ -68,4 +68,94 @@ body::after {
     background-size: 100% 4px;
     z-index: 9999;
     pointer-events: none;
+    transition: opacity 0.3s;
+}
+
+body.disable-crt::after {
+    opacity: 0;
+}
+
+body.large-text {
+    font-size: 1.5rem;
+}
+
+/* UI Elements */
+#hamburger-menu {
+    display: none;
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    background: var(--border-color);
+    color: var(--text-color);
+    border: none;
+    font-size: 24px;
+    min-width: 44px;
+    min-height: 44px;
+    z-index: 10000;
+    cursor: pointer;
+}
+
+.action-btn {
+    background-color: #225522;
+    color: #33ff33;
+    border: 2px solid #33ff33;
+    padding: 10px;
+    margin: 5px 0;
+    font-family: inherit;
+    font-weight: bold;
+    cursor: pointer;
+    width: 100%;
+    min-height: 44px; /* Phase 5: Accessibility target size */
+}
+
+.action-btn:hover {
+    background-color: #33ff33;
+    color: #000;
+}
+
+#a11y-controls {
+    margin-top: 20px;
+    border-top: 2px dashed var(--border-color);
+    padding-top: 10px;
+}
+
+/* Responsive Design */
+@media (max-width: 1100px) {
+    #game-wrapper {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto 200px;
+        width: 100vw;
+        height: 100vh;
+        border: none;
+        padding: 0;
+    }
+    
+    #phaser-container {
+        grid-column: 1 / 2;
+        grid-row: 1 / 2;
+        width: 100%;
+    }
+    
+    #hamburger-menu {
+        display: block;
+    }
+    
+    #stats-panel {
+        position: fixed;
+        right: -100%;
+        top: 0;
+        bottom: 0;
+        width: 250px;
+        transition: right 0.3s;
+        z-index: 9998;
+    }
+    
+    #stats-panel.open {
+        right: 0;
+    }
+    
+    #chat-log {
+        grid-column: 1 / 2;
+        grid-row: 3 / 4;
+    }
 }

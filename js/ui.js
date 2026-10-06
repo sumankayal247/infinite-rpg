@@ -42,14 +42,61 @@ export function renderEnemyEncounter(scene, aiResponseJSON) {
     return sprite;
 }
 
+export let isSlowTyping = true;
+
+export function setupUIHooks() {
+    // Hamburger Menu
+    const menuBtn = document.getElementById('hamburger-menu');
+    const statsPanel = document.getElementById('stats-panel');
+    if (menuBtn && statsPanel) {
+        menuBtn.addEventListener('click', () => {
+            statsPanel.classList.toggle('open');
+        });
+    }
+
+    // Accessibility Toggles
+    const crtToggle = document.getElementById('toggle-crt');
+    if (crtToggle) {
+        crtToggle.addEventListener('change', (e) => {
+            document.body.classList.toggle('disable-crt', !e.target.checked);
+        });
+    }
+
+    const scaleToggle = document.getElementById('toggle-text-scale');
+    if (scaleToggle) {
+        scaleToggle.addEventListener('change', (e) => {
+            document.body.classList.toggle('large-text', e.target.checked);
+        });
+    }
+
+    const slowTypeToggle = document.getElementById('toggle-slow-type');
+    if (slowTypeToggle) {
+        slowTypeToggle.addEventListener('change', (e) => {
+            isSlowTyping = e.target.checked;
+        });
+    }
+}
+
 export function updateChatLog(message) {
     const chatLog = document.getElementById('chat-log');
     if (!chatLog) return;
 
     const entry = document.createElement('p');
-    entry.textContent = message; // Phase 6: XSS Prevention (using textContent)
     chatLog.appendChild(entry);
-    
-    // Auto-scroll
-    chatLog.scrollTop = chatLog.scrollHeight;
+
+    if (isSlowTyping) {
+        let i = 0;
+        function typeWriter() {
+            if (i < message.length) {
+                entry.textContent += message.charAt(i);
+                i++;
+                chatLog.scrollTop = chatLog.scrollHeight;
+                setTimeout(typeWriter, 20); // 20ms delay per char
+            }
+        }
+        typeWriter();
+    } else {
+        entry.textContent = message; // Phase 6: XSS Prevention
+        chatLog.scrollTop = chatLog.scrollHeight;
+    }
 }
