@@ -20,10 +20,16 @@
         
         <aside id="stats-panel">
             <h2>Player Stats</h2>
-            <!-- Stats will be injected here -->
+            <div id="player-stats-display" style="margin-bottom: 20px;">
+                HP: <span id="stat-hp">100</span> / <span id="stat-maxhp">100</span><br>
+                Level: <span id="stat-lvl">1</span> (<span id="stat-xp">0</span> XP)<br>
+                Gold: <span id="stat-gold">0</span><br>
+            </div>
+            
             <div id="action-buttons">
-                <button class="action-btn">Attack</button>
-                <button class="action-btn">Flee</button>
+                <button id="btn-explore" class="action-btn">Explore (Map)</button>
+                <button id="btn-attack" class="action-btn" style="display:none;">Attack</button>
+                <button id="btn-flee" class="action-btn" style="display:none;">Flee</button>
             </div>
             
             <!-- Accessibility Options -->

@@ -13,11 +13,18 @@ const THEME_COLORS = {
 };
 
 export function preloadAssets(scene) {
-    // Preload base AVIF template
-    scene.load.image('base_enemy', './assets/sprites/base_enemy.avif');
+    // Preload placeholder sprites
+    scene.load.image('base_enemy', './assets/sprites/base_enemy.png');
+    scene.load.image('default_bg', './assets/backgrounds/default_bg.png');
 }
 
 export function renderEnemyEncounter(scene, aiResponseJSON) {
+    // Clear previous children
+    scene.children.removeAll();
+
+    // Render background
+    scene.add.image(400, 300, 'default_bg');
+
     // Determine color based on AI visual_theme
     const themeColor = THEME_COLORS[aiResponseJSON.visual_theme] || THEME_COLORS["default"];
 
