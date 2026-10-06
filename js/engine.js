@@ -24,12 +24,18 @@ export function deriveStats(baseStats, equipment = [], statusEffects = []) {
         critChance: 0.05 + (baseStats.AGI * 0.01) // 5% base + 1% per AGI
     };
 
-    // Apply equipment modifiers
+    // Apply equipment modifiers and parse special effects
     equipment.forEach(item => {
         if (item.stats) {
             if (item.stats.attack) derived.attack += item.stats.attack;
             if (item.stats.defense) derived.defense += item.stats.defense;
             if (item.stats.hp) derived.maxHp += item.stats.hp;
+        }
+        
+        // Phase 2: Equipment & Potions with Special Effects
+        if (item.special_effects) {
+            if (!derived.special_effects) derived.special_effects = [];
+            derived.special_effects.push(...item.special_effects);
         }
     });
 
