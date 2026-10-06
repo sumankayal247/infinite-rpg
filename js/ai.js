@@ -32,8 +32,11 @@ export async function generateEncounter(playerHp, playerStr, playerLevel, biome)
 
     try {
         const response = await puter.ai.chat(prompt);
+        // Puter API might return an object with a toString method or a message property
+        let responseText = typeof response === 'string' ? response : (response.message?.content || response.toString());
+        
         // Clean markdown backticks if present
-        let cleanJson = response.replace(/```json/g, '').replace(/```/g, '').trim();
+        let cleanJson = responseText.replace(/```json/gi, '').replace(/```/g, '').trim();
         return JSON.parse(cleanJson);
     } catch (e) {
         console.error("AI Generation failed. Falling back.", e);
