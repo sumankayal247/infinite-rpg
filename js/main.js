@@ -1,5 +1,7 @@
 import * as Engine from './engine.js';
 import * as AI from './ai.js';
+import * as AudioSys from './audio.js';
+import * as UI from './ui.js';
 
 // Phaser Game Configuration
 const config = {
@@ -23,15 +25,18 @@ const config = {
 const game = new Phaser.Game(config);
 
 function preload() {
-    // Preload assets here later (AVIF, SVG, Opus)
     console.log("Phaser Preload: Initialized");
     
     // Load AI graceful degradation fallback data
     AI.loadFallbackData();
+    
+    // Phase 4: Preload Assets & Audio
+    UI.preloadAssets(this);
+    AudioSys.preloadAudio(this);
 }
 
 async function create() {
-    this.add.text(400, 300, 'Infinite RPG Engine Initialized', { 
+    this.add.text(400, 50, 'Infinite RPG Engine Initialized', { 
         fontFamily: 'Courier', 
         fontSize: '24px', 
         color: '#00ff00' 
@@ -42,13 +47,12 @@ async function create() {
     // Phase 1 Test: Load data and test engine
     try {
         const playerData = await Engine.fetchGameData('player_base.json');
-        console.log("Base Player Data Loaded:", playerData);
         
-        const derived = Engine.deriveStats(playerData.base_stats, [{stats: {attack: 5}}]);
-        console.log("Derived Stats (with +5 ATK sword):", derived);
-
-        const damageRoll = Engine.calculateDamage(derived, {defense: 10});
-        console.log("Test Damage Roll vs 10 DEF:", damageRoll);
+        // Phase 4 Test: Trigger AI and render via UI/Audio
+        const encounter = await AI.generateEncounter(100, 15, 1, "ice");
+        UI.renderEnemyEncounter(this, encounter);
+        AudioSys.playDynamicAudio(this, encounter);
+        
     } catch (e) {
         console.error("Engine test failed:", e);
     }
