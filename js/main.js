@@ -166,15 +166,19 @@ function onExplore() {
     level: Engine.gameState.player.level,
   });
 
-  // Generate Map Nodes
-  const nodes = MapSys.generateNodesForRegion(1, 3);
-  const container = document.getElementById("action-buttons");
+  // Generate Map Nodes from the deterministic ASCII world fork
+  const world =
+    Engine.gameState.map.currentWorld ||
+    MapSys.generateWorld(Engine.gameState.runSeed || 1234, Engine.gameState.player.level);
+  Engine.gameState.map.currentWorld = world;
+  const nodes = world.nodes;
 
   const s = switchScene("MapScene");
   s.renderMap(nodes, onNodeSelected);
 }
 
 function onNodeSelected(node) {
+  UI.clearAsciiMap();
   if (node.type === "Shop") {
     Engine.setMode("SHOP");
     Engine.gameState.shopDiscount = 0;
@@ -263,6 +267,7 @@ async function triggerCombat(isElite = false, isGuard = false) {
 // ----------------------------------------------------
 async function triggerMystery() {
   Engine.setMode("MYSTERY");
+  UI.clearAsciiMap();
   updateUIDOM();
   UI.updateChatLog("Approaching a point of interest...");
 
@@ -286,8 +291,7 @@ async function triggerMystery() {
   }
 }
 
-async function onMysteryChoice(eventData, choice) {
-  let rollTotal = null;
+async function onMysteryChoice(eventData, choice) {  let rollTotal = null;
   let isSuccess = null;
 
   if (

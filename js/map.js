@@ -1,7 +1,10 @@
 /**
  * map.js
  * Phase 2: Node-Based Exploration & Progression Gating
+ * Layout math lives here (engine-owned). ascii.js is the
+ * deterministic renderer. AI only narrates, never lays out.
  */
+import { generateWorldMap, renderAscii, LEGEND } from "./ascii.js";
 
 // 7. Progression Gating
 const REGION_TIERS = {
@@ -43,4 +46,15 @@ export function generateNodesForRegion(regionTier, count = 3) {
         });
     }
     return nodes;
+}
+
+// Branching world: deterministic 3-path fork + ASCII art.
+// seed = run id (persist per run), level gates region/biome.
+export function generateWorld(seed = 1234, playerLevel = 1) {
+    const world = generateWorldMap(seed, playerLevel);
+    return {
+        ...world,
+        ascii: renderAscii(world),
+        legend: LEGEND,
+    };
 }

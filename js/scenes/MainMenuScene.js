@@ -10,6 +10,7 @@ export default class MainMenuScene extends Phaser.Scene {
 
   create() {
     Engine.gameState.phaserScene = this;
+    UI.clearAsciiMap();
     this.add.image(400, 300, "default_bg").setTint(0x111133);
 
     this.add

@@ -33,6 +33,33 @@ body {
     grid-row: 1 / 2;
     border: 2px solid var(--border-color);
     position: relative; /* for phaser scaling */
+    background-color: #000;
+    overflow: hidden;
+}
+
+#ascii-map {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    padding: 12px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 12px;
+    line-height: 1.35;
+    letter-spacing: 1px;
+    color: var(--text-color);
+    text-shadow: 0 0 6px rgba(51, 255, 51, 0.65);
+    white-space: pre;
+    overflow: auto;
+    pointer-events: none;
+    z-index: 20;
+    background: rgba(0, 0, 0, 0.88);
+}
+
+#ascii-map:empty { display: none; }
+
+#phaser-container canvas {
+    position: relative;
+    z-index: 10;
 }
 
 #stats-panel {

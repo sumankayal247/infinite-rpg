@@ -115,3 +115,16 @@ export function updateChatLog(message) {
         chatLog.scrollTop = chatLog.scrollHeight;
     }
 }
+
+// ASCII world map mirror (DOM fallback + screen-reader copy).
+// Uses textContent only (XSS-safe). Primary theme color via CSS.
+export function renderAsciiMap(asciiString) {
+    const pre = document.getElementById('ascii-map');
+    if (!pre) return;
+    pre.textContent = asciiString;
+}
+
+export function clearAsciiMap() {
+    const pre = document.getElementById('ascii-map');
+    if (pre) pre.textContent = "";
+}

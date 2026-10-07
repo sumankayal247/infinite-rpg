@@ -162,7 +162,9 @@ export const gameState = {
   map: {
     currentNode: null,
     choices: [],
+    currentWorld: null,
   },
+  runSeed: 1234,
 };
 
 export function setMode(newMode) {
@@ -268,6 +270,7 @@ export function awardXP(amount) {
 
 export function initPlayer(baseStats) {
   gameState.player.baseStats = baseStats;
+  gameState.runSeed = Math.floor(Math.random() * 90000) + 1000;
   const starterWeapon = {
     id: "wpn_starter",
     name: "Rusty Sword",
