@@ -5,7 +5,7 @@ export default class EventScene extends Phaser.Scene {
     super("EventScene");
   }
   create() {
-    this.add.image(400, 300, "default_bg").setTint(0x550055);
+    this.drawBackdrop();
     this.titleText = this.add
       .text(400, 100, "", {
         fontFamily: "Courier",
@@ -25,10 +25,9 @@ export default class EventScene extends Phaser.Scene {
 
   renderEvent(eventData, onChoice) {
     this.children.removeAll();
-    this.add.image(400, 300, "default_bg").setTint(0x550055);
-
+    this.drawBackdrop();
     this.add
-      .text(400, 50, eventData.title, {
+      .text(400, 50, eventData.title || "Mystery", {
         fontFamily: "Courier",
         fontSize: "28px",
         color: "#00ff00",
@@ -72,8 +71,27 @@ export default class EventScene extends Phaser.Scene {
     this.input.enabled = true;
   }
 
+  // Game Boy-styled backdrop; image only if the texture actually loaded
+  drawBackdrop() {
+    if (this.textures && this.textures.exists("default_bg")) {
+      this.add.image(400, 300, "default_bg").setTint(0x9bbc0f);
+    } else {
+      this.add.rectangle(400, 300, 800, 600, 0x0f380f).setOrigin(0.5);
+      this.add.rectangle(400, 300, 640, 480, 0x9bbc0f).setOrigin(0.5);
+    }
+  }
+
   playD20(resultText, onComplete) {
-    const dice = this.add.image(400, 300, "d20").setScale(2);
+    try {
+      const hasDie = this.textures && this.textures.exists("d20");
+      const dice = hasDie
+        ? this.add.image(400, 300, "d20").setScale(2)
+        : this.add.rectangle(400, 300, 90, 90, 0x0f380f).setOrigin(0.5);
+    } catch (e) {
+      console.warn("[event-dice] skipped:", e);
+      if (onComplete) onComplete();
+      return;
+    }
     this.tweens.add({
       targets: dice,
       angle: 720,

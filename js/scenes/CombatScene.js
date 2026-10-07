@@ -16,7 +16,17 @@ export default class CombatScene extends Phaser.Scene {
   }
 
   playD20(resultText, onComplete) {
-    const dice = this.add.image(400, 300, "d20").setScale(2);
+    let dice;
+    try {
+      dice =
+        this.textures && this.textures.exists("d20")
+          ? this.add.image(400, 300, "d20").setScale(2)
+          : this.add.rectangle(400, 300, 90, 90, 0x0f380f).setOrigin(0.5);
+    } catch (e) {
+      console.warn("[combat-dice] skipped:", e);
+      if (onComplete) onComplete();
+      return;
+    }
     this.tweens.add({
       targets: dice,
       angle: 720,

@@ -116,15 +116,78 @@ function updateUIDOM() {
     btns.upgrade.style.display = "block";
     btns.leave.style.display = "block";
   } else if (Engine.gameState.mode === "MYSTERY") {
-    // dynamic .map-node-btn handle themselves
+    // DOM choice buttons (.map-node-btn) handle themselves.
+    // Fail-safe: if canvas choices never rendered, offer Leave.
+    if (document.querySelectorAll(".map-node-btn").length === 0) {
+      btns.leave.style.display = "block";
+    }
   }
+
+  // GLOBAL FAIL-SAFE: the loop must never strand the player with no
+  // visible action. If alive and nothing is shown, force MAP + Explore.
+  const anyVisible = Object.values(btns).some(
+    (b) => b.style.display !== "none",
+  );
+  const anyChoice = document.querySelectorAll(".map-node-btn").length > 0;
+  if (!anyVisible && !anyChoice && !isDead) {
+    Engine.setMode("MAP");
+    btns.explore.style.display = "block";
+  }
+}
+
+// ----------------------------------------------------
+// NEVER-STOP LOOP HELPERS
+// Every handler funnels errors here instead of softlocking.
+// ----------------------------------------------------
+function clearDomChoices() {
+  document.querySelectorAll(".map-node-btn").forEach((b) => b.remove());
+}
+
+function recover(err, where) {
+  console.error(`[recover:${where}]`, err);
+  try {
+    UI.updateChatLog("The path twists... you press onward.");
+  } catch {}
+  clearDomChoices();
+  returnToMap();
+}
+
+function safe(where, fn) {
+  return (...args) => {
+    try {
+      const r = fn(...args);
+      if (r && typeof r.catch === "function") r.catch((e) => recover(e, where));
+    } catch (e) {
+      recover(e, where);
+    }
+  };
+}
+
+// D20 roll that never crashes on a missing scene (skips animation)
+function safeRoll(text) {
+  const sc = getActiveScene();
+  if (!sc || !sc.tweens) return Promise.resolve();
+  return new Promise((resolve) => rollD20Animation(sc, text, resolve));
+}
+
+// Guarantees playable stats before any loop step (fixes null derived)
+async function ensureReadyOrWarn() {
+  const ok = await Engine.ensurePlayerReady();
+  if (!ok) UI.updateChatLog("Your spirit falters... (stats failed to load)");
+  updateUIDOM();
+  return ok;
 }
 
 // ----------------------------------------------------
 // DICE ANIMATION (Phase 2 Requirement)
 // ----------------------------------------------------
 function rollD20Animation(scene, resultText, onComplete) {
-  const dice = scene.add.image(400, 300, "d20").setScale(2);
+  try {
+    if (!scene || !scene.add) throw new Error("no scene");
+    const hasDie = scene.textures && scene.textures.exists("d20");
+    const dice = hasDie
+      ? scene.add.image(400, 300, "d20").setScale(2)
+      : scene.add.rectangle(400, 300, 90, 90, 0x0f380f).setOrigin(0.5);
 
   // Spin animation
   scene.tweens.add({
@@ -150,21 +213,30 @@ function rollD20Animation(scene, resultText, onComplete) {
       });
     },
   });
+  } catch (e) {
+    console.warn("[dice] animation skipped:", e);
+    if (onComplete) onComplete();
+  }
 }
 
 // ----------------------------------------------------
 // MAP LOGIC
 // ----------------------------------------------------
-function onExplore() {
+async function onExplore() {
+  if (!(await ensureReadyOrWarn())) return;
   UI.updateChatLog("Scouting the area ahead...");
   Object.values(btns).forEach((b) => (b.style.display = "none"));
 
   // Pre-fetch AI content for likely next actions to minimize latency
-  AI.prefetchNextNodes({
-    hp: Engine.gameState.player.hp,
-    str: Engine.gameState.player.derived.attack,
-    level: Engine.gameState.player.level,
-  });
+  try {
+    AI.prefetchNextNodes({
+      hp: Engine.gameState.player.hp,
+      str: Engine.gameState.player.derived.attack,
+      level: Engine.gameState.player.level,
+    });
+  } catch (e) {
+    console.warn("[prefetch] skipped:", e);
+  }
 
   // Generate Map Nodes from the deterministic ASCII world fork
   const world =
@@ -283,7 +355,17 @@ async function triggerMystery() {
     UI.updateChatLog(eventData.desc);
 
     const s = switchScene("EventScene");
-    s.renderEvent(eventData, (choice) => onMysteryChoice(eventData, choice));
+    try {
+      s.renderEvent(eventData, (choice) => onMysteryChoice(eventData, choice));
+    } catch (e) {
+      console.warn("[event] canvas render failed, DOM fallback:", e);
+    }
+    // DOM choice buttons: playable even if the canvas render fails.
+    // updateUIDOM leaves these alone (it only manages the fixed buttons).
+    renderDomChoices(eventData, (choice) =>
+      onMysteryChoice(eventData, choice),
+    );
+    updateUIDOM();
   } catch (e) {
     UI.updateChatLog("The mystery vanishes before your eyes...");
     SaveSys.saveGameState(Engine.gameState);
@@ -291,7 +373,47 @@ async function triggerMystery() {
   }
 }
 
-async function onMysteryChoice(eventData, choice) {  let rollTotal = null;
+// DOM mirror of event choices — guarantees forward progress.
+function renderDomChoices(eventData, onPick) {
+  clearDomChoices();
+  const container = document.getElementById("action-buttons");
+  if (!container || !eventData.choices) return;
+  eventData.choices.forEach((choice) => {
+    const b = document.createElement("button");
+    b.className = "action-btn map-node-btn";
+    b.textContent =
+      choice.text +
+      (choice.stat_check && choice.stat_check !== "NONE"
+        ? ` [${choice.stat_check}]`
+        : "");
+    b.addEventListener(
+      "click",
+      () => {
+        clearDomChoices();
+        onPick(choice);
+      },
+      { once: true },
+    );
+    container.appendChild(b);
+  });
+}
+
+async function onMysteryChoice(eventData, choice) {
+  clearDomChoices();
+  try {
+    await resolveMystery(eventData, choice);
+  } catch (e) {
+    console.error("[mystery] choice failed, recovering:", e);
+    UI.updateChatLog("Fate intervenes... you move on.");
+  }
+  updateUIDOM();
+
+  // The loop always continues — never strand the player on an event.
+  setTimeout(() => returnToMap(), 2000);
+}
+
+async function resolveMystery(eventData, choice) {
+  let rollTotal = null;
   let isSuccess = null;
 
   if (
@@ -309,9 +431,7 @@ async function onMysteryChoice(eventData, choice) {  let rollTotal = null;
       `Rolling ${choice.stat_check}... Rolled a ${check.roll} + ${statVal} = ${rollTotal}.`,
     );
 
-    await new Promise((resolve) =>
-      rollD20Animation(getActiveScene(), `D20: ${rollTotal}`, resolve)
-    );
+    await safeRoll(`D20: ${rollTotal}`);
   } else {
     UI.updateChatLog(`You chose: ${choice.text}`);
   }
@@ -365,14 +485,10 @@ async function onMysteryChoice(eventData, choice) {  let rollTotal = null;
       UI.updateChatLog(`NEW QUEST: ${outcome.consequence.new_quest}`);
     }
   }
-
-  updateUIDOM();
-
-  // Continue Button
-  setTimeout(() => returnToMap(), 2000);
 }
 
 function returnToMap() {
+  clearDomChoices();
   Engine.setMode("MAP");
   Engine.gameState.enemy = null;
   const s = switchScene("MapScene");
@@ -533,7 +649,7 @@ function onFlee() {
     10,
   );
   Object.values(btns).forEach((b) => (b.disabled = true));
-  rollD20Animation(getActiveScene(), `FLEE D20: ${check.total}`, () => {
+  safeRoll(`FLEE D20: ${check.total}`).then(() => {
     if (check.success) {
       UI.updateChatLog("You successfully fled!");
       SaveSys.logWorldEvent(`Player fled from ${Engine.gameState.enemy.name}.`);
@@ -554,9 +670,7 @@ function onSteal() {
     0.8,
   );
   Object.values(btns).forEach((b) => (b.disabled = true));
-  rollD20Animation(
-    getActiveScene(),
-    `STEAL AGI: ${Engine.gameState.player.baseStats.AGI}`,
+  safeRoll(`STEAL AGI: ${Engine.gameState.player.baseStats.AGI}`).then(
     () => {
       if (result.success) {
         UI.updateChatLog("Successfully pickpocketed 30 Gold!");
@@ -608,7 +722,7 @@ function onHaggle() {
     Engine.gameState.player.baseStats.CHA,
     12,
   );
-  rollD20Animation(getActiveScene(), `HAGGLE D20: ${check.total}`, () => {
+  safeRoll(`HAGGLE D20: ${check.total}`).then(() => {
     if (check.success) {
       Engine.gameState.shopDiscount = 0.5; // 50% off
       UI.updateChatLog("The merchant liked your charm! 50% discount.");
@@ -703,17 +817,24 @@ function onUpgrade() {
   }
 }
 
-// Bind Buttons
-btns.explore.addEventListener("click", onExplore);
-btns.attack.addEventListener("click", onAttack);
-btns.flee.addEventListener("click", onFlee);
-btns.steal.addEventListener("click", onSteal);
-btns.bribe.addEventListener("click", onBribe);
-btns.buy.addEventListener("click", onBuy);
-btns.gear.addEventListener("click", onBuyGear);
-btns.haggle.addEventListener("click", onHaggle);
-btns.upgrade.addEventListener("click", onUpgrade);
-btns.leave.addEventListener("click", returnToMap);
+// Bind Buttons — every handler is safe-wrapped: an exception mid-flow
+// recovers to MAP instead of leaving the UI dead.
+btns.explore.addEventListener("click", safe("explore", onExplore));
+btns.attack.addEventListener("click", safe("attack", onAttack));
+btns.flee.addEventListener("click", safe("flee", onFlee));
+btns.steal.addEventListener("click", safe("steal", onSteal));
+btns.bribe.addEventListener("click", safe("bribe", onBribe));
+btns.buy.addEventListener("click", safe("buy", onBuy));
+btns.gear.addEventListener("click", safe("buygear", onBuyGear));
+btns.haggle.addEventListener("click", safe("haggle", onHaggle));
+btns.upgrade.addEventListener("click", safe("upgrade", onUpgrade));
+btns.leave.addEventListener(
+  "click",
+  safe("leave", () => {
+    clearDomChoices();
+    returnToMap();
+  }),
+);
 
 // Phaser Configuration
 const config = {

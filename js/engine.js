@@ -202,6 +202,7 @@ export function upgradeBaseStat(stat, amount) {
 }
 
 export function recalculateDerivedStats() {
+  if (!gameState.player.baseStats) return false;
   const equipArray = Object.values(gameState.player.equipment).filter(
     (e) => e !== null,
   );
@@ -212,6 +213,22 @@ export function recalculateDerivedStats() {
   gameState.player.maxHp = gameState.player.derived.maxHp;
   if (gameState.player.hp > gameState.player.maxHp)
     gameState.player.hp = gameState.player.maxHp;
+  return true;
+}
+
+// Never-crash guard: guarantees baseStats + derived exist.
+// Returns true when the player is playable. Called before any loop step.
+export async function ensurePlayerReady() {
+  if (!gameState.player.baseStats) {
+    try {
+      const pData = await fetchGameData("player_base.json");
+      initPlayer(pData.base_stats);
+    } catch {
+      return false;
+    }
+  }
+  if (!gameState.player.derived) recalculateDerivedStats();
+  return !!(gameState.player.baseStats && gameState.player.derived);
 }
 
 export function damageEnemy(amount) {

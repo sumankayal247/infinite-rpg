@@ -257,15 +257,41 @@ export async function resolveMysteryEvent(eventDesc, choice, rollTotal) {
   }
 }
 
-function getFallbackEvent() {
-  return {
+const FALLBACK_EVENTS = [
+  {
     title: "Mysterious Statue",
-    desc: "A weathered weeping angel statue holding a glowing ruby in its outstretched hand.",
+    desc: "A weathered weeping angel statue holds a glowing ruby in its outstretched hand. The air smells of rain and old stone.",
     choices: [
       { id: "c1", text: "Snatch the ruby", stat_check: "AGI" },
-      { id: "c2", text: "Leave it alone", stat_check: "NONE" },
+      { id: "c2", text: "Kneel and pray", stat_check: "CHA" },
+      { id: "c3", text: "Leave it alone", stat_check: "NONE" },
     ],
-  };
+  },
+  {
+    title: "Wounded Traveler",
+    desc: "A cloaked traveler slumps against a mossy rock, clutching a bleeding arm. Behind them, the treeline rustles with something large.",
+    choices: [
+      { id: "c1", text: "Bind their wounds", stat_check: "INT" },
+      { id: "c2", text: "Interrogate them first", stat_check: "CHA" },
+      { id: "c3", text: "Draw steel and wait", stat_check: "NONE" },
+    ],
+  },
+  {
+    title: "Sunken Cache",
+    desc: "Half-buried in the mud glints an iron-bound chest, its lock rusted but intact. Fresh footprints circle it — twice.",
+    choices: [
+      { id: "c1", text: "Pick the lock", stat_check: "AGI" },
+      { id: "c2", text: "Smash it open", stat_check: "STR" },
+      { id: "c3", text: "Study the footprints", stat_check: "INT" },
+    ],
+  },
+];
+let fallbackEventIdx = 0;
+
+function getFallbackEvent() {
+  const ev = FALLBACK_EVENTS[fallbackEventIdx % FALLBACK_EVENTS.length];
+  fallbackEventIdx++;
+  return JSON.parse(JSON.stringify(ev)); // fresh copy per encounter
 }
 
 function getFallbackResolution(choice, rollTotal) {

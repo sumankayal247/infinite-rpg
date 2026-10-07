@@ -22,18 +22,35 @@ export function renderEnemyEncounter(scene, aiResponseJSON) {
     // Clear previous children
     scene.children.removeAll();
 
-    // Render background
-    scene.add.image(400, 300, 'default_bg');
+    const hasBg = scene.textures && scene.textures.exists('default_bg');
+    const hasSprite = scene.textures && scene.textures.exists('base_enemy');
+
+    if (hasBg) {
+        // Render background
+        scene.add.image(400, 300, 'default_bg');
+    } else {
+        // Game Boy fallback: dark screen backdrop, never black-on-black
+        scene.add.rectangle(400, 300, 800, 600, 0x0f380f).setOrigin(0.5);
+        scene.add.rectangle(400, 300, 560, 420, 0x9bbc0f).setOrigin(0.5);
+    }
 
     // Determine color based on AI visual_theme
     const themeColor = THEME_COLORS[aiResponseJSON.visual_theme] || THEME_COLORS["default"];
 
-    // Render the base AVIF sprite to the Phaser Canvas
-    const sprite = scene.add.image(400, 200, 'base_enemy');
-    sprite.setScale(4); // Scale up for blocky 64-bit feel
+    // Render the base sprite to the Phaser Canvas
+    let sprite;
+    if (hasSprite) {
+        sprite = scene.add.image(400, 200, 'base_enemy');
+        sprite.setScale(4); // Scale up for blocky 64-bit feel
 
-    // Procedural 64-bit Assets: Use Phaser's tint pipeline to hue-shift the base AVIF template
-    sprite.setTint(themeColor);
+        // Procedural 64-bit Assets: Use Phaser's tint pipeline to hue-shift
+        sprite.setTint(themeColor);
+    } else {
+        // Game Boy fallback: pixel brute enemy, always visible
+        sprite = scene.add.rectangle(400, 200, 120, 120, 0x0f380f).setOrigin(0.5);
+        scene.add.rectangle(370, 180, 20, 20, 0x9bbc0f).setOrigin(0.5);
+        scene.add.rectangle(430, 180, 20, 20, 0x9bbc0f).setOrigin(0.5);
+    }
 
     // Render the name
     scene.add.text(400, 320, aiResponseJSON.name, {

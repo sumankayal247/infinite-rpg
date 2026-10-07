@@ -11,7 +11,12 @@ export default class MainMenuScene extends Phaser.Scene {
   create() {
     Engine.gameState.phaserScene = this;
     UI.clearAsciiMap();
-    this.add.image(400, 300, "default_bg").setTint(0x111133);
+    if (this.textures && this.textures.exists("default_bg")) {
+      this.add.image(400, 300, "default_bg").setTint(0x111133);
+    } else {
+      this.add.rectangle(400, 300, 800, 600, 0x0f380f).setOrigin(0.5);
+      this.add.rectangle(400, 300, 640, 480, 0x9bbc0f).setOrigin(0.5);
+    }
 
     this.add
       .text(400, 150, "INFINITE RPG", {
