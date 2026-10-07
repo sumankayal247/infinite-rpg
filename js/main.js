@@ -1,543 +1,738 @@
-import * as Engine from './engine.js';
-import * as AI from './ai.js';
-import * as AudioSys from './audio.js';
-import * as SaveSys from './save.js';
-import * as UI from './ui.js';
-import * as MapSys from './map.js';
-import * as Skills from './skills.js';
-import * as Economy from './economy.js';
-import * as Meta from './meta.js';
+import * as Engine from "./engine.js";
+import * as AI from "./ai.js";
+import * as AudioSys from "./audio.js";
+import * as SaveSys from "./save.js";
+import * as UI from "./ui.js";
+import * as MapSys from "./map.js";
+import * as Skills from "./skills.js";
+import * as Economy from "./economy.js";
+import * as Meta from "./meta.js";
+import BootScene from "./scenes/BootScene.js";
+import MainMenuScene from "./scenes/MainMenuScene.js";
+import MapScene from "./scenes/MapScene.js";
+import CombatScene from "./scenes/CombatScene.js";
+import ShopScene from "./scenes/ShopScene.js";
+import EventScene from "./scenes/EventScene.js";
 
+function getActiveScene() {
+  if (!Engine.gameState.phaserGame) return null;
+  return Engine.gameState.phaserGame.scene.scenes.find((s) =>
+    s.scene.isActive(),
+  );
+}
+
+function switchScene(key) {
+  const current = getActiveScene();
+  if (current && current.scene.key !== key) {
+    current.scene.switch(key);
+  } else if (!current) {
+    Engine.gameState.phaserGame.scene.start(key);
+  }
+  return Engine.gameState.phaserGame.scene.getScene(key);
+}
 // Game State
 
 // DOM Elements
 const btns = {
-    explore: document.getElementById('btn-explore'),
-    attack: document.getElementById('btn-attack'),
-    bribe: document.getElementById('btn-bribe'),
-    steal: document.getElementById('btn-steal'),
-    flee: document.getElementById('btn-flee'),
-    buy: document.getElementById('btn-shop-buy'),
-    haggle: document.getElementById('btn-shop-haggle'),
-    upgrade: document.getElementById('btn-smith-upgrade'),
-    leave: document.getElementById('btn-leave')
+  explore: document.getElementById("btn-explore"),
+  attack: document.getElementById("btn-attack"),
+  bribe: document.getElementById("btn-bribe"),
+  steal: document.getElementById("btn-steal"),
+  flee: document.getElementById("btn-flee"),
+  buy: document.getElementById("btn-shop-buy"),
+  gear: document.getElementById("btn-shop-gear"),
+  haggle: document.getElementById("btn-shop-haggle"),
+  upgrade: document.getElementById("btn-smith-upgrade"),
+  leave: document.getElementById("btn-leave"),
 };
 
 const stats = {
-    hp: document.getElementById('stat-hp'),
-    maxHp: document.getElementById('stat-maxhp'),
-    lvl: document.getElementById('stat-lvl'),
-    xp: document.getElementById('stat-xp'),
-    gold: document.getElementById('stat-gold')
+  hp: document.getElementById("stat-hp"),
+  maxHp: document.getElementById("stat-maxhp"),
+  lvl: document.getElementById("stat-lvl"),
+  xp: document.getElementById("stat-xp"),
+  gold: document.getElementById("stat-gold"),
 };
 
 function updateUIDOM() {
-    stats.hp.innerText = Engine.gameState.player.hp;
-    stats.maxHp.innerText = Engine.gameState.player.maxHp;
-    stats.lvl.innerText = Engine.gameState.player.level;
-    stats.xp.innerText = Engine.gameState.player.xp;
-    stats.gold.innerText = Engine.gameState.player.gold;
+  stats.hp.innerText = Engine.gameState.player.hp;
+  stats.maxHp.innerText = Engine.gameState.player.maxHp;
+  stats.lvl.innerText = Engine.gameState.player.level;
+  stats.xp.innerText = Engine.gameState.player.xp;
+  stats.gold.innerText = Engine.gameState.player.gold;
 
-    // Hide all
-    Object.values(btns).forEach(b => b.style.display = 'none');
-    
-    // Check if we are showing map choices
-    const mapChoicesVisible = document.querySelectorAll('.map-node-btn').length > 0;
+  // Update equipment
+  const eq = Engine.gameState.player.equipment;
+  const wpnSpan = document.getElementById("eq-weapon");
+  const amrSpan = document.getElementById("eq-armor");
+  const accSpan = document.getElementById("eq-accessory");
+  if (wpnSpan)
+    wpnSpan.innerText = eq.weapon
+      ? `${eq.weapon.name} ${eq.weapon.broken ? "(BROKEN)" : `(${eq.weapon.durability}/${eq.weapon.maxDurability})`}`
+      : "None";
+  if (amrSpan) amrSpan.innerText = eq.armor ? eq.armor.name : "None";
+  if (accSpan) accSpan.innerText = eq.accessory ? eq.accessory.name : "None";
 
-    // Show based on mode
-    if (Engine.gameState.mode === 'MAP') {
-        if (!mapChoicesVisible) btns.explore.style.display = 'block';
-    } else if (Engine.gameState.mode === 'COMBAT') {
-        btns.attack.style.display = 'block';
-        btns.bribe.style.display = 'block';
-        btns.flee.style.display = 'block';
-        if (Engine.gameState.enemy && Engine.gameState.enemy.name !== "City Guard") btns.steal.style.display = 'block';
-    } else if (Engine.gameState.mode === 'SHOP') {
-        btns.buy.style.display = 'block';
-        btns.haggle.style.display = 'block';
-        btns.steal.style.display = 'block';
-        btns.leave.style.display = 'block';
-        btns.buy.innerText = `Buy Potion (${Math.floor(25 * (1 - Engine.gameState.shopDiscount))}g)`;
-    } else if (Engine.gameState.mode === 'SMITH') {
-        btns.upgrade.style.display = 'block';
-        btns.leave.style.display = 'block';
-    } else if (Engine.gameState.mode === 'MYSTERY') {
-        // dynamic .map-node-btn handle themselves
-    }
+  // Update inventory
+  const invList = document.getElementById("inv-list");
+  if (invList) {
+    invList.innerHTML = "";
+    Engine.gameState.player.inventory.forEach((item) => {
+      const li = document.createElement("li");
+      li.innerText = item.name + (item.broken ? " (BROKEN)" : "");
+      invList.appendChild(li);
+    });
+  }
+
+  // Hide and reset disabled state for all
+  const isDead = Engine.gameState.player.hp <= 0;
+  Object.values(btns).forEach((b) => {
+    b.style.display = "none";
+    b.disabled = isDead;
+  });
+
+  // Check if we are showing map choices
+  const mapChoicesVisible =
+    document.querySelectorAll(".map-node-btn").length > 0;
+
+  // Show based on mode
+  if (Engine.gameState.mode === "MAP") {
+    if (!mapChoicesVisible) btns.explore.style.display = "block";
+  } else if (Engine.gameState.mode === "COMBAT") {
+    btns.attack.style.display = "block";
+    btns.bribe.style.display = "block";
+    btns.flee.style.display = "block";
+    if (Engine.gameState.enemy && Engine.gameState.enemy.name !== "City Guard")
+      btns.steal.style.display = "block";
+  } else if (Engine.gameState.mode === "SHOP") {
+    btns.buy.style.display = "block";
+    btns.gear.style.display = "block";
+    btns.haggle.style.display = "block";
+    btns.steal.style.display = "block";
+    btns.gear.innerText = `Buy Gear (${Math.floor(75 * (1 - Engine.gameState.shopDiscount))}g)`;
+    btns.leave.style.display = "block";
+    btns.buy.innerText = `Buy Potion (${Math.floor(25 * (1 - Engine.gameState.shopDiscount))}g)`;
+  } else if (Engine.gameState.mode === "SMITH") {
+    btns.upgrade.style.display = "block";
+    btns.leave.style.display = "block";
+  } else if (Engine.gameState.mode === "MYSTERY") {
+    // dynamic .map-node-btn handle themselves
+  }
 }
 
 // ----------------------------------------------------
 // DICE ANIMATION (Phase 2 Requirement)
 // ----------------------------------------------------
 function rollD20Animation(scene, resultText, onComplete) {
-    const dice = scene.add.image(400, 300, 'd20').setScale(2);
-    
-    // Spin animation
-    scene.tweens.add({
-        targets: dice,
-        angle: 720,
-        scale: 4,
-        duration: 1000,
-        ease: 'Cubic.easeOut',
-        onComplete: () => {
-            const text = scene.add.text(400, 300, resultText, { 
-                fontFamily: 'Courier', fontSize: '32px', color: '#00ff00', backgroundColor: '#000' 
-            }).setOrigin(0.5);
-            
-            scene.time.delayedCall(1500, () => {
-                dice.destroy();
-                text.destroy();
-                if (onComplete) onComplete();
-            });
-        }
-    });
+  const dice = scene.add.image(400, 300, "d20").setScale(2);
+
+  // Spin animation
+  scene.tweens.add({
+    targets: dice,
+    angle: 720,
+    scale: 4,
+    duration: 1000,
+    ease: "Cubic.easeOut",
+    onComplete: () => {
+      const text = scene.add
+        .text(400, 300, resultText, {
+          fontFamily: "Courier",
+          fontSize: "32px",
+          color: "#00ff00",
+          backgroundColor: "#000",
+        })
+        .setOrigin(0.5);
+
+      scene.time.delayedCall(1500, () => {
+        dice.destroy();
+        text.destroy();
+        if (onComplete) onComplete();
+      });
+    },
+  });
 }
 
 // ----------------------------------------------------
 // MAP LOGIC
 // ----------------------------------------------------
 function onExplore() {
-    UI.updateChatLog("Scouting the area ahead...");
-    Object.values(btns).forEach(b => b.style.display = 'none');
+  UI.updateChatLog("Scouting the area ahead...");
+  Object.values(btns).forEach((b) => (b.style.display = "none"));
 
-    // Generate Map Nodes
-    const nodes = MapSys.generateNodesForRegion(1, 3);
-    const container = document.getElementById('action-buttons');
-    
-    document.querySelectorAll('.map-node-btn').forEach(b => b.remove());
+  // Pre-fetch AI content for likely next actions to minimize latency
+  AI.prefetchNextNodes({
+    hp: Engine.gameState.player.hp,
+    str: Engine.gameState.player.derived.attack,
+    level: Engine.gameState.player.level,
+  });
 
-    nodes.forEach((node, idx) => {
-        const btn = document.createElement('button');
-        btn.className = 'action-btn map-node-btn';
-        btn.innerText = `Path ${idx + 1}: ${node.type}`;
-        btn.onclick = () => onNodeSelected(node);
-        container.appendChild(btn);
-    });
+  // Generate Map Nodes
+  const nodes = MapSys.generateNodesForRegion(1, 3);
+  const container = document.getElementById("action-buttons");
+
+  const s = switchScene("MapScene");
+  s.renderMap(nodes, onNodeSelected);
 }
 
 function onNodeSelected(node) {
-    document.querySelectorAll('.map-node-btn').forEach(b => b.remove());
-    
-    if (node.type === "Shop") {
-        Engine.setMode('SHOP');
-        Engine.gameState.shopDiscount = 0;
-        UI.updateChatLog("You entered a local Shop.");
-        Engine.gameState.phaserScene.children.removeAll();
-        Engine.gameState.phaserScene.add.image(400, 300, 'shop').setScale(4);
-        updateUIDOM();
-    } else if (node.type === "Campfire") {
-        Engine.setMode('SMITH');
-        UI.updateChatLog("You found a traveling Blacksmith.");
-        Engine.gameState.phaserScene.children.removeAll();
-        Engine.gameState.phaserScene.add.image(400, 300, 'blacksmith').setScale(4);
-        updateUIDOM();
-    } else if (node.type === "Mystery") {
-        triggerMystery();
-    } else {
-        triggerCombat(node.type === "Elite Combat");
-    }
+  if (node.type === "Shop") {
+    Engine.setMode("SHOP");
+    Engine.gameState.shopDiscount = 0;
+    UI.updateChatLog("You entered a local Shop.");
+    const s = switchScene("ShopScene");
+    s.renderShop("shop");
+    updateUIDOM();
+  } else if (node.type === "Campfire") {
+    Engine.setMode("SMITH");
+    UI.updateChatLog("You found a traveling Blacksmith.");
+    const s = switchScene("ShopScene");
+    s.renderShop("blacksmith");
+    updateUIDOM();
+  } else if (node.type === "Mystery") {
+    triggerMystery();
+  } else {
+    triggerCombat(node.type === "Elite Combat");
+  }
 }
 
 async function triggerCombat(isElite = false, isGuard = false) {
-    Engine.setMode('COMBAT');
-    Object.values(btns).forEach(b => b.disabled = true);
-    
-    try {
-        const regionNames = MapSys.getAvailableRegions(Engine.gameState.player.level);
-        const currentRegion = regionNames[regionNames.length - 1].name;
-        
-        let promptTheme = isGuard ? "guard" : (isElite ? "elite boss in " + currentRegion : currentRegion);
-        
-        const encounter = await AI.generateEncounter(
-            Engine.gameState.player.hp, 
-            Engine.gameState.player.derived.attack, 
-            Engine.gameState.player.level, 
-            promptTheme
-        );
+  Engine.setMode("COMBAT");
+  Object.values(btns).forEach((b) => (b.disabled = true));
 
-        let eName = isGuard ? "City Guard" : encounter.name;
-        if (isElite && !isGuard) eName = "Elite " + eName;
-        UI.updateChatLog(`Enemy Appeared! ${eName} - ${encounter.desc}`);
-        
-        const multiplier = isElite ? 2 : 1;
-        Engine.setEnemy({
-            name: eName,
-            hp: 20 * Engine.gameState.player.level * multiplier,
-            maxHp: 20 * Engine.gameState.player.level * multiplier,
-            agi: (5 + Math.floor(Engine.gameState.player.level / 2)) * multiplier,
-            statusEffects: [],
-            derived: { 
-                attack: (5 + Engine.gameState.player.level) * multiplier, 
-                defense: 2 * multiplier, 
-                critChance: 0.05 
-            },
-            greed: 10 + Math.floor(Math.random() * 20)
-        });
-        Engine.gameState.player.statusEffects = []; // Clear player status on new combat
-        
-        // Determine Initiative Turn Order
-        const turnOrder = Engine.determineTurnOrder([
-            { id: 'player', name: 'You', agi: Engine.gameState.player.baseStats.AGI },
-            { id: 'enemy', name: eName, agi: Engine.gameState.enemy.agi }
-        ]);
-        Engine.gameState.combat = { turnOrder, turnIndex: 0 };
-        
-        UI.updateChatLog(`Turn Order: ${turnOrder.map(t => t.name).join(" -> ")}`);
-        
-        UI.renderEnemyEncounter(Engine.gameState.phaserScene, encounter);
-        AudioSys.playDynamicAudio(Engine.gameState.phaserScene, encounter);
-        
-        processTurnQueue();
-    } catch (e) {
-        UI.updateChatLog("Error generating enemy.");
-        updateUIDOM();
-    }
+  try {
+    const regionNames = MapSys.getAvailableRegions(
+      Engine.gameState.player.level,
+    );
+    const currentRegion = regionNames[regionNames.length - 1].name;
+
+    let promptTheme = isGuard
+      ? "guard"
+      : isElite
+        ? "elite boss in " + currentRegion
+        : currentRegion;
+
+    const encounter = await AI.generateEncounter(
+      Engine.gameState.player.hp,
+      Engine.gameState.player.derived.attack,
+      Engine.gameState.player.level,
+      promptTheme,
+    );
+
+    let eName = isGuard ? "City Guard" : encounter.name;
+    if (isElite && !isGuard) eName = "Elite " + eName;
+    UI.updateChatLog(`Enemy Appeared! ${eName} - ${encounter.desc}`);
+
+    const multiplier = isElite ? 2 : 1;
+    Engine.setEnemy({
+      name: eName,
+      hp: 20 * Engine.gameState.player.level * multiplier,
+      maxHp: 20 * Engine.gameState.player.level * multiplier,
+      agi: (5 + Math.floor(Engine.gameState.player.level / 2)) * multiplier,
+      statusEffects: [],
+      derived: {
+        attack: (5 + Engine.gameState.player.level) * multiplier,
+        defense: 2 * multiplier,
+        critChance: 0.05,
+      },
+    });
+    Engine.gameState.player.statusEffects = []; // Clear player status on new combat
+
+    // Determine Initiative Turn Order
+    const turnOrder = Engine.determineTurnOrder([
+      { id: "player", name: "You", agi: Engine.gameState.player.baseStats.AGI },
+      { id: "enemy", name: eName, agi: Engine.gameState.enemy.agi },
+    ]);
+    Engine.gameState.combat = { turnOrder, turnIndex: 0 };
+
+    UI.updateChatLog(
+      `Turn Order: ${turnOrder.map((t) => t.name).join(" -> ")}`,
+    );
+
+    const s = switchScene("CombatScene");
+    s.renderEncounter(encounter);
+
+    processTurnQueue();
+  } catch (e) {
+    UI.updateChatLog("Error generating enemy.");
+    returnToMap();
+  }
 }
-
 
 // ----------------------------------------------------
 // MYSTERY EVENT LOGIC
 // ----------------------------------------------------
 async function triggerMystery() {
-    Engine.setMode('MYSTERY');
-    updateUIDOM();
-    UI.updateChatLog("Approaching a point of interest...");
+  Engine.setMode("MYSTERY");
+  updateUIDOM();
+  UI.updateChatLog("Approaching a point of interest...");
 
-    const regionNames = MapSys.getAvailableRegions(Engine.gameState.player.level);
-    const currentRegion = regionNames[regionNames.length - 1].name;
+  const regionNames = MapSys.getAvailableRegions(Engine.gameState.player.level);
+  const currentRegion = regionNames[regionNames.length - 1].name;
 
-    try {
-        const eventData = await AI.generateMysteryEvent(currentRegion, Engine.gameState.player.level);
-        UI.updateChatLog(`--- ${eventData.title} ---`);
-        UI.updateChatLog(eventData.desc);
+  try {
+    const eventData = await AI.generateMysteryEvent(
+      currentRegion,
+      Engine.gameState.player.level,
+    );
+    UI.updateChatLog(`--- ${eventData.title} ---`);
+    UI.updateChatLog(eventData.desc);
 
-        const container = document.getElementById('action-buttons');
-        document.querySelectorAll('.map-node-btn').forEach(b => b.remove());
-
-        eventData.choices.forEach((choice) => {
-            const btn = document.createElement('button');
-            btn.className = 'action-btn map-node-btn';
-            btn.innerText = choice.text + (choice.stat_check !== 'NONE' ? ` [${choice.stat_check}]` : '');
-            btn.onclick = () => onMysteryChoice(eventData, choice);
-            container.appendChild(btn);
-        });
-    } catch(e) {
-        UI.updateChatLog("The mystery vanishes before your eyes...");
-        returnToMap();
-    }
+    const s = switchScene("EventScene");
+    s.renderEvent(eventData, (choice) => onMysteryChoice(eventData, choice));
+  } catch (e) {
+    UI.updateChatLog("The mystery vanishes before your eyes...");
+    SaveSys.saveGameState(Engine.gameState);
+    returnToMap();
+  }
 }
 
 async function onMysteryChoice(eventData, choice) {
-    document.querySelectorAll('.map-node-btn').forEach(b => b.disabled = true);
-    
-    let rollTotal = null;
-    let isSuccess = null;
+  let rollTotal = null;
+  let isSuccess = null;
 
-    if (choice.stat_check !== 'NONE' && Engine.gameState.player.baseStats[choice.stat_check]) {
-        const statVal = Engine.gameState.player.baseStats[choice.stat_check];
-        const check = Skills.performSkillCheck(statVal, 10 + Engine.gameState.player.level);
-        rollTotal = check.total;
-        isSuccess = check.success;
-        UI.updateChatLog(`Rolling ${choice.stat_check}... Rolled a ${check.roll} + ${statVal} = ${rollTotal}.`);
-        
-        await new Promise(resolve => rollD20Animation(Engine.gameState.phaserScene, `D20: ${rollTotal}`, resolve));
-    } else {
-        UI.updateChatLog(`You chose: ${choice.text}`);
+  if (
+    choice.stat_check !== "NONE" &&
+    Engine.gameState.player.baseStats[choice.stat_check]
+  ) {
+    const statVal = Engine.gameState.player.baseStats[choice.stat_check];
+    const check = Skills.performSkillCheck(
+      statVal,
+      10 + Engine.gameState.player.level,
+    );
+    rollTotal = check.total;
+    isSuccess = check.success;
+    UI.updateChatLog(
+      `Rolling ${choice.stat_check}... Rolled a ${check.roll} + ${statVal} = ${rollTotal}.`,
+    );
+
+    await new Promise((resolve) =>
+      rollD20Animation(getActiveScene(), `D20: ${rollTotal}`, resolve)
+    );
+  } else {
+    UI.updateChatLog(`You chose: ${choice.text}`);
+  }
+
+  UI.updateChatLog("Resolving outcome...");
+
+  const outcome = await AI.resolveMysteryEvent(
+    eventData.desc,
+    choice,
+    rollTotal,
+  );
+  UI.updateChatLog(outcome.desc);
+  SaveSys.logWorldEvent(`Event: ${eventData.title}. Outcome: ${outcome.desc}`);
+
+  if (outcome.consequence) {
+    if (outcome.consequence.hp_change) {
+      if (outcome.consequence.hp_change > 0)
+        Engine.healPlayer(outcome.consequence.hp_change);
+      else {
+        const died = Engine.damagePlayer(
+          Math.abs(outcome.consequence.hp_change),
+        );
+        if (died) {
+          UI.updateChatLog(
+            "YOU DIED from the event! Game Over. Refresh to restart.",
+          );
+          updateUIDOM();
+          return;
+        }
+      }
     }
-
-    UI.updateChatLog("Resolving outcome...");
-
-    const outcome = await AI.resolveMysteryEvent(eventData.desc, choice, rollTotal);
-    UI.updateChatLog(outcome.desc);
-
-    if (outcome.consequence) {
-        if (outcome.consequence.hp_change) {
-            if (outcome.consequence.hp_change > 0) Engine.healPlayer(outcome.consequence.hp_change);
-            else {
-                const died = Engine.damagePlayer(Math.abs(outcome.consequence.hp_change));
-                if (died) {
-                    UI.updateChatLog("YOU DIED from the event! Game Over. Refresh to restart.");
-                    updateUIDOM();
-                    return;
-                }
-            }
-        }
-        if (outcome.consequence.gold_change) {
-            if (outcome.consequence.gold_change > 0) Engine.awardGold(outcome.consequence.gold_change);
-            else Engine.spendGold(Math.abs(outcome.consequence.gold_change));
-        }
-        if (outcome.consequence.xp_change && outcome.consequence.xp_change > 0) {
-            if (Engine.awardXP(outcome.consequence.xp_change)) {
-                UI.updateChatLog(`LEVEL UP! You are now Level ${Engine.gameState.player.level}!`);
-            }
-        }
+    if (outcome.consequence.gold_change) {
+      if (outcome.consequence.gold_change > 0)
+        Engine.awardGold(outcome.consequence.gold_change);
+      else Engine.spendGold(Math.abs(outcome.consequence.gold_change));
     }
+    if (outcome.consequence.xp_change && outcome.consequence.xp_change > 0) {
+      if (Engine.awardXP(outcome.consequence.xp_change)) {
+        UI.updateChatLog(
+          `LEVEL UP! You are now Level ${Engine.gameState.player.level}!`,
+        );
+      }
+    }
+    if (
+      outcome.consequence.new_quest &&
+      typeof outcome.consequence.new_quest === "string" &&
+      outcome.consequence.new_quest.length > 3
+    ) {
+      if (!Engine.gameState.quests) Engine.gameState.quests = [];
+      Engine.gameState.quests.push({ title: outcome.consequence.new_quest });
+      UI.updateChatLog(`NEW QUEST: ${outcome.consequence.new_quest}`);
+    }
+  }
 
-    updateUIDOM();
-    
-    // Continue Button
-    const container = document.getElementById('action-buttons');
-    document.querySelectorAll('.map-node-btn').forEach(b => b.remove());
-    const btn = document.createElement('button');
-    btn.className = 'action-btn map-node-btn';
-    btn.innerText = "Continue Adventure";
-    btn.onclick = () => {
-        document.querySelectorAll('.map-node-btn').forEach(b => b.remove());
-        returnToMap();
-    };
-    container.appendChild(btn);
+  updateUIDOM();
+
+  // Continue Button
+  setTimeout(() => returnToMap(), 2000);
 }
 
 function returnToMap() {
-    Engine.setMode('MAP');
-    Engine.gameState.enemy = null;
-    Engine.gameState.phaserScene.children.removeAll();
-    AudioSys.playDynamicAudio(Engine.gameState.phaserScene, { is_hostile: false, visual_theme: "default" });
-    updateUIDOM();
+  Engine.setMode("MAP");
+  Engine.gameState.enemy = null;
+  const s = switchScene("MapScene");
+  AudioSys.playDynamicAudio(s, { is_hostile: false, visual_theme: "default" });
+  updateUIDOM();
+  SaveSys.saveGameState(Engine.gameState);
 }
 
 // ----------------------------------------------------
 // COMBAT & SKILLS LOGIC
 // ----------------------------------------------------
 function processTurnQueue() {
-    if (!Engine.gameState.enemy || Engine.gameState.mode !== 'COMBAT') return;
-    
-    let currentEntity = Engine.gameState.combat.turnOrder[Engine.gameState.combat.turnIndex];
-    
-    // Process DOT and Status Expiry
-    const statusResults = Engine.processStatusEffects(currentEntity.id);
-    statusResults.log.forEach(msg => UI.updateChatLog(msg));
-    
-    if (statusResults.isDead) {
-        handleDeath(currentEntity.id);
-        return;
-    }
-    
-    if (currentEntity.id === 'enemy') {
-        Object.values(btns).forEach(b => b.disabled = true);
-        setTimeout(() => enemyTurn(), 1000);
-    } else {
-        Object.values(btns).forEach(b => b.disabled = false);
-        updateUIDOM();
-    }
+  if (!Engine.gameState.enemy || Engine.gameState.mode !== "COMBAT") return;
+
+  let currentEntity =
+    Engine.gameState.combat.turnOrder[Engine.gameState.combat.turnIndex];
+
+  // Process DOT and Status Expiry
+  const statusResults = Engine.processStatusEffects(currentEntity.id);
+  statusResults.log.forEach((msg) => UI.updateChatLog(msg));
+
+  if (statusResults.isDead) {
+    handleDeath(currentEntity.id);
+    return;
+  }
+
+  if (currentEntity.id === "enemy") {
+    Object.values(btns).forEach((b) => (b.disabled = true));
+    setTimeout(() => enemyTurn(), 1000);
+  } else {
+    Object.values(btns).forEach((b) => (b.disabled = false));
+    updateUIDOM();
+  }
 }
 
 function advanceTurn() {
-    Engine.gameState.combat.turnIndex = (Engine.gameState.combat.turnIndex + 1) % Engine.gameState.combat.turnOrder.length;
-    processTurnQueue();
+  Engine.gameState.combat.turnIndex =
+    (Engine.gameState.combat.turnIndex + 1) %
+    Engine.gameState.combat.turnOrder.length;
+  processTurnQueue();
 }
 
 function handleDeath(entityId) {
-    if (entityId === 'player') {
-        UI.updateChatLog("YOU DIED. Game Over. Refresh to restart.");
-        Object.values(btns).forEach(b => b.disabled = true);
-        updateUIDOM();
-    } else {
-        UI.updateChatLog(`You defeated the ${Engine.gameState.enemy.name}!`);
-        Engine.awardGold(15);
-        Meta.trackEnemyDefeated();
-        if (Engine.awardXP(50)) {
-            UI.updateChatLog(`LEVEL UP! You are now Level ${Engine.gameState.player.level}!`);
-        }
-        returnToMap();
+  if (entityId === "player") {
+    UI.updateChatLog("YOU DIED. Game Over. Refresh to restart.");
+    Object.values(btns).forEach((b) => (b.disabled = true));
+    updateUIDOM();
+  } else {
+    UI.updateChatLog(`You defeated the ${Engine.gameState.enemy.name}!`);
+    SaveSys.logWorldEvent(`Player defeated ${Engine.gameState.enemy.name}.`);
+    Engine.awardGold(15);
+    Meta.trackEnemyDefeated();
+    if (Engine.awardXP(50)) {
+      UI.updateChatLog(
+        `LEVEL UP! You are now Level ${Engine.gameState.player.level}!`,
+      );
     }
+    SaveSys.saveGameState(Engine.gameState);
+    returnToMap();
+  }
 }
 
 function enemyTurn() {
-    if (!Engine.gameState.enemy) return;
+  if (!Engine.gameState.enemy) return;
 
-    let eDmgRoll = Engine.calculateDamage(Engine.gameState.enemy.derived, Engine.gameState.player.derived);
-    Engine.damagePlayer(eDmgRoll.damage);
-    UI.updateChatLog(`${Engine.gameState.enemy.name} hit you for ${eDmgRoll.damage} damage!`);
+  let eDmgRoll = Engine.calculateDamage(
+    Engine.gameState.enemy.derived,
+    Engine.gameState.player.derived,
+  );
+  Engine.damagePlayer(eDmgRoll.damage);
+  UI.updateChatLog(
+    `${Engine.gameState.enemy.name} hit you for ${eDmgRoll.damage} damage!`,
+  );
 
-    // 25% chance for enemy to poison
-    if (Math.random() < 0.25) {
-        Engine.applyStatusEffect('player', { name: "Poison", duration: 3, dot: 5 });
-        UI.updateChatLog(`You were poisoned by ${Engine.gameState.enemy.name}!`);
-    }
+  // 25% chance for enemy to poison
+  if (Math.random() < 0.25) {
+    Engine.applyStatusEffect("player", { name: "Poison", duration: 3, dot: 5 });
+    UI.updateChatLog(`You were poisoned by ${Engine.gameState.enemy.name}!`);
+  }
 
-    if (Engine.gameState.player.hp <= 0) {
-        handleDeath('player');
-        return;
-    }
-    advanceTurn();
+  if (Engine.gameState.player.hp <= 0) {
+    handleDeath("player");
+    return;
+  }
+  advanceTurn();
 }
 
 function onAttack() {
-    SaveSys.trackPlayerChoice("Attack");
-    if (!Engine.gameState.enemy) return;
+  SaveSys.trackPlayerChoice("Attack");
+  if (!Engine.gameState.enemy) return;
 
-    let dmgRoll = Engine.calculateDamage(Engine.gameState.player.derived, Engine.gameState.enemy.derived);
-    Engine.damageEnemy(dmgRoll.damage);
-    UI.updateChatLog(`You attacked ${Engine.gameState.enemy.name} for ${dmgRoll.damage} damage! ${dmgRoll.isCrit ? '(CRIT!)' : ''}`);
-
-    // 25% chance for player to cause bleed
-    if (Math.random() < 0.25) {
-        Engine.applyStatusEffect('enemy', { name: "Bleed", duration: 3, dot: 5 });
-        UI.updateChatLog(`${Engine.gameState.enemy.name} is bleeding!`);
-    }
-
-    if (Engine.gameState.enemy.hp <= 0) {
-        handleDeath('enemy');
+  let wpn = Engine.gameState.player.equipment.weapon;
+  if (wpn) {
+    if (wpn.broken) {
+      UI.updateChatLog("Your weapon is broken! You punch for 1 damage.");
+      Engine.damageEnemy(1);
+      if (Engine.gameState.enemy.hp <= 0) {
+        handleDeath("enemy");
         return;
+      }
+      Object.values(btns).forEach((b) => (b.disabled = true));
+      advanceTurn();
+      return;
+    } else {
+      Economy.degradeWeapon(wpn);
+      if (wpn.broken) {
+        UI.updateChatLog(`CRACK! Your ${wpn.name} broke!`);
+        Engine.recalculateDerivedStats();
+      }
     }
-    Object.values(btns).forEach(b => b.disabled = true);
-    advanceTurn();
+  }
+
+  let dmgRoll = Engine.calculateDamage(
+    Engine.gameState.player.derived,
+    Engine.gameState.enemy.derived,
+  );
+
+  // Process special weapon effects
+  if (Engine.gameState.player.derived.special_effects) {
+    Engine.gameState.player.derived.special_effects.forEach((effect) => {
+      if (effect.name === "Burn" && Math.random() < 0.3) {
+        Engine.applyStatusEffect("enemy", effect);
+        UI.updateChatLog(`Your weapon ignited ${Engine.gameState.enemy.name}!`);
+      }
+      if (effect.name === "Cleave") {
+        dmgRoll.damage = Math.floor(dmgRoll.damage * 1.2);
+      }
+    });
+  }
+
+  Engine.damageEnemy(dmgRoll.damage);
+  UI.updateChatLog(
+    `You attacked ${Engine.gameState.enemy.name} for ${dmgRoll.damage} damage! ${dmgRoll.isCrit ? "(CRIT!)" : ""}`,
+  );
+
+  // Default 15% chance for player to cause bleed if no special effects
+  if (
+    !Engine.gameState.player.derived.special_effects &&
+    Math.random() < 0.15
+  ) {
+    Engine.applyStatusEffect("enemy", { name: "Bleed", duration: 3, dot: 5 });
+    UI.updateChatLog(`${Engine.gameState.enemy.name} is bleeding!`);
+  }
+
+  if (Engine.gameState.enemy.hp <= 0) {
+    handleDeath("enemy");
+    return;
+  }
+  Object.values(btns).forEach((b) => (b.disabled = true));
+  advanceTurn();
 }
 
 function onFlee() {
-    SaveSys.trackPlayerChoice("Flee");
-    const check = Skills.performSkillCheck(Engine.gameState.player.baseStats.AGI, 10);
-    Object.values(btns).forEach(b => b.disabled = true);
-    rollD20Animation(Engine.gameState.phaserScene, `FLEE D20: ${check.total}`, () => {
-        if (check.success) {
-            UI.updateChatLog("You successfully fled!");
-            returnToMap();
-        } else {
-            UI.updateChatLog("Failed to flee!");
-            advanceTurn();
-        }
-    });
+  SaveSys.trackPlayerChoice("Flee");
+  const check = Skills.performSkillCheck(
+    Engine.gameState.player.baseStats.AGI,
+    10,
+  );
+  Object.values(btns).forEach((b) => (b.disabled = true));
+  rollD20Animation(getActiveScene(), `FLEE D20: ${check.total}`, () => {
+    if (check.success) {
+      UI.updateChatLog("You successfully fled!");
+      SaveSys.logWorldEvent(`Player fled from ${Engine.gameState.enemy.name}.`);
+      SaveSys.saveGameState(Engine.gameState);
+      returnToMap();
+    } else {
+      UI.updateChatLog("Failed to flee!");
+      advanceTurn();
+    }
+  });
 }
 
 function onSteal() {
-    SaveSys.trackPlayerChoice("Steal");
-    const check = Skills.performSkillCheck(Engine.gameState.player.baseStats.AGI, 15);
-    Object.values(btns).forEach(b => b.disabled = true);
-    rollD20Animation(Engine.gameState.phaserScene, `STEAL D20: ${check.total}`, () => {
-        if (check.success) {
-            UI.updateChatLog("Successfully pickpocketed 30 Gold!");
-            Engine.awardGold(30);
-            if (Engine.gameState.mode !== 'COMBAT') returnToMap(); 
-            else advanceTurn();
+  SaveSys.trackPlayerChoice("Steal");
+  // Use the actual attemptSteal mechanic from skills.js
+  const result = Skills.attemptSteal(
+    Engine.gameState.player.baseStats.AGI,
+    0.8,
+  );
+  Object.values(btns).forEach((b) => (b.disabled = true));
+  rollD20Animation(
+    getActiveScene(),
+    `STEAL AGI: ${Engine.gameState.player.baseStats.AGI}`,
+    () => {
+      if (result.success) {
+        UI.updateChatLog("Successfully pickpocketed 30 Gold!");
+        Engine.awardGold(30);
+        if (Engine.gameState.mode !== "COMBAT") {
+          SaveSys.saveGameState(Engine.gameState);
+          returnToMap();
         } else {
-            UI.updateChatLog("Caught stealing! The guards have been alerted!");
-            Skills.wantedLevel++;
-            triggerCombat(false, true);
+          advanceTurn();
         }
-    });
+      } else {
+        UI.updateChatLog(
+          `Caught stealing! ${result.message}! Wanted Level: ${result.wantedLevel}`,
+        );
+        triggerCombat(false, true);
+      }
+    },
+  );
 }
 
 function onBribe() {
-    SaveSys.trackPlayerChoice("Bribe");
-    if (Engine.spendGold(10)) {
-        const success = Economy.attemptBribe(10, Engine.gameState.enemy.greed);
-        if (success) {
-            UI.updateChatLog(`${Engine.gameState.enemy.name} accepted your bribe and left!`);
-            returnToMap();
-        } else {
-            UI.updateChatLog(`${Engine.gameState.enemy.name} scoffed at your meager bribe!`);
-            Object.values(btns).forEach(b => b.disabled = true);
-            advanceTurn();
-        }
+  SaveSys.trackPlayerChoice("Bribe");
+  if (Engine.spendGold(10)) {
+    const success = Economy.attemptBribe(10, Engine.gameState.enemy.greed);
+    if (success) {
+      UI.updateChatLog(
+        `${Engine.gameState.enemy.name} accepted your bribe and left!`,
+      );
+      SaveSys.logWorldEvent(`Player bribed ${Engine.gameState.enemy.name}.`);
+      SaveSys.saveGameState(Engine.gameState);
+      returnToMap();
     } else {
-        UI.updateChatLog("Not enough gold to bribe.");
+      UI.updateChatLog(
+        `${Engine.gameState.enemy.name} scoffed at your meager bribe!`,
+      );
+      Object.values(btns).forEach((b) => (b.disabled = true));
+      advanceTurn();
     }
+  } else {
+    UI.updateChatLog("Not enough gold to bribe.");
+  }
 }
 
 // ----------------------------------------------------
 // SHOP & BLACKSMITH LOGIC
 // ----------------------------------------------------
 function onHaggle() {
-    const check = Skills.performSkillCheck(Engine.gameState.player.baseStats.CHA, 12);
-    rollD20Animation(Engine.gameState.phaserScene, `HAGGLE D20: ${check.total}`, () => {
-        if (check.success) {
-            Engine.gameState.shopDiscount = 0.5; // 50% off
-            UI.updateChatLog("The merchant liked your charm! 50% discount.");
-        } else {
-            UI.updateChatLog("The merchant was insulted by your lowball offer.");
-            btns.haggle.disabled = true;
-        }
-        updateUIDOM();
-    });
+  const check = Skills.performSkillCheck(
+    Engine.gameState.player.baseStats.CHA,
+    12,
+  );
+  rollD20Animation(getActiveScene(), `HAGGLE D20: ${check.total}`, () => {
+    if (check.success) {
+      Engine.gameState.shopDiscount = 0.5; // 50% off
+      UI.updateChatLog("The merchant liked your charm! 50% discount.");
+    } else {
+      UI.updateChatLog("The merchant was insulted by your lowball offer.");
+      btns.haggle.disabled = true;
+    }
+    updateUIDOM();
+  });
 }
 
 function onBuy() {
-    SaveSys.trackPlayerChoice("Buy");
-    const price = Math.floor(25 * (1 - Engine.gameState.shopDiscount));
-    if (Engine.spendGold(price)) {
-        const potion = { id: `pot_${Date.now()}`, name: "Health Potion", heal: 50 };
-        Engine.addToInventory(potion);
-        // Auto-consume for now since there's no inventory UI
-        Engine.healPlayer(50);
-        UI.updateChatLog(`Bought Potion! Healed 50 HP.`);
-        updateUIDOM();
-    } else {
-        UI.updateChatLog("Not enough gold.");
-    }
+  SaveSys.trackPlayerChoice("Buy");
+  // Using Economy module for proper pricing
+  const baseVal = 16;
+  let price = Economy.calculateItemPrice(
+    baseVal,
+    true,
+    Engine.gameState.player.baseStats.CHA,
+    Engine.gameState.shopDiscount > 0,
+  );
+  price = Math.floor(price * (1 - Engine.gameState.shopDiscount)); // apply additional explicit haggle discount
+  if (Engine.spendGold(price)) {
+    const potion = { id: `pot_${Date.now()}`, name: "Health Potion", heal: 50 };
+    Engine.addToInventory(potion);
+    Engine.healPlayer(50);
+    UI.updateChatLog(`Bought Potion! Healed 50 HP.`);
+    updateUIDOM();
+  } else {
+    UI.updateChatLog("Not enough gold.");
+  }
+}
+
+async function onBuyGear() {
+  SaveSys.trackPlayerChoice("BuyGear");
+  const baseVal = 50;
+  let price = Economy.calculateItemPrice(
+    baseVal,
+    true,
+    Engine.gameState.player.baseStats.CHA,
+    Engine.gameState.shopDiscount > 0,
+  );
+  price = Math.floor(price * (1 - Engine.gameState.shopDiscount));
+  if (Engine.spendGold(price)) {
+    const eqData = await Engine.fetchGameData("equipment.json");
+    const types = ["weapons", "armors", "accessories"];
+    const t = types[Math.floor(Math.random() * types.length)];
+    const list = eqData[t];
+    const item = Object.assign(
+      {},
+      list[Math.floor(Math.random() * list.length)],
+    ); // clone
+    item.id = `${item.id}_${Date.now()}`;
+    item.durability = item.maxDurability;
+    Engine.equipItem(item);
+    UI.updateChatLog(`Bought and equipped ${item.name}!`);
+    updateUIDOM();
+  } else {
+    UI.updateChatLog("Not enough gold.");
+  }
 }
 
 function onUpgrade() {
-    SaveSys.trackPlayerChoice("Upgrade");
-    if (Engine.spendGold(50)) {
-        const weapon = { 
-            id: `wpn_${Date.now()}`, 
-            slot: 'weapon',
-            name: `Iron Sword +${Engine.gameState.player.level}`,
-            stats: { attack: 2 * Engine.gameState.player.level }
-        };
-        Engine.addToInventory(weapon);
-        Engine.equipItem(weapon);
-        
-        UI.updateChatLog(`Forged and equipped ${weapon.name}!`);
-        updateUIDOM();
+  SaveSys.trackPlayerChoice("Upgrade");
+  const wpn = Engine.gameState.player.equipment.weapon;
+
+  if (!wpn) {
+    UI.updateChatLog("You don't have a weapon to work on.");
+    return;
+  }
+
+  if (wpn.broken || wpn.durability < wpn.maxDurability) {
+    if (Engine.spendGold(20)) {
+      Economy.repairItem(wpn, 20, 0, 20, 0);
+      Engine.recalculateDerivedStats();
+      UI.updateChatLog(
+        `Repaired your ${wpn.name} to full durability for 20 gold.`,
+      );
+      updateUIDOM();
     } else {
-        UI.updateChatLog("Not enough gold.");
+      UI.updateChatLog("Not enough gold to repair (20g).");
     }
+  } else {
+    if (Engine.spendGold(50)) {
+      Economy.upgradeItem(wpn, 50, 0, 50, 0);
+      Engine.recalculateDerivedStats();
+      UI.updateChatLog(`Upgraded your weapon to ${wpn.name} for 50 gold!`);
+      updateUIDOM();
+    } else {
+      UI.updateChatLog("Not enough gold to upgrade (50g).");
+    }
+  }
 }
 
-
 // Bind Buttons
-btns.explore.addEventListener('click', onExplore);
-btns.attack.addEventListener('click', onAttack);
-btns.flee.addEventListener('click', onFlee);
-btns.steal.addEventListener('click', onSteal);
-btns.bribe.addEventListener('click', onBribe);
-btns.buy.addEventListener('click', onBuy);
-btns.haggle.addEventListener('click', onHaggle);
-btns.upgrade.addEventListener('click', onUpgrade);
-btns.leave.addEventListener('click', returnToMap);
+btns.explore.addEventListener("click", onExplore);
+btns.attack.addEventListener("click", onAttack);
+btns.flee.addEventListener("click", onFlee);
+btns.steal.addEventListener("click", onSteal);
+btns.bribe.addEventListener("click", onBribe);
+btns.buy.addEventListener("click", onBuy);
+btns.gear.addEventListener("click", onBuyGear);
+btns.haggle.addEventListener("click", onHaggle);
+btns.upgrade.addEventListener("click", onUpgrade);
+btns.leave.addEventListener("click", returnToMap);
 
 // Phaser Configuration
 const config = {
-    type: Phaser.AUTO,
-    parent: 'phaser-container',
-    width: 800,
-    height: 600,
-    backgroundColor: '#000000',
-    pixelArt: true,
-    scene: { preload: preload, create: create },
-    scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH }
+  type: Phaser.AUTO,
+  parent: "phaser-container",
+  width: 800,
+  height: 600,
+  backgroundColor: "#000000",
+  pixelArt: true,
+  scene: [
+    BootScene,
+    MainMenuScene,
+    MapScene,
+    CombatScene,
+    ShopScene,
+    EventScene,
+  ],
+  scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
 };
 
-new Phaser.Game(config);
+UI.setupUIHooks();
+Engine.gameState.phaserGame = new Phaser.Game(config);
 
-function preload() {
-    AI.loadFallbackData();
-    UI.preloadAssets(this);
-    AudioSys.preloadAudio(this);
-    
-    // Load new generated images
-    this.load.image('shop', './assets/sprites/shop.png');
-    this.load.image('blacksmith', './assets/sprites/blacksmith.png');
-    this.load.image('d20', './assets/sprites/d20.png');
-}
-
-async function create() {
-    Engine.gameState.phaserScene = this;
-    UI.setupUIHooks();
-
-    const saved = SaveSys.loadGameState();
-    if (saved && saved.state) {
-        Object.assign(Engine.gameState, saved.state);
-        Engine.gameState.phaserScene = this;
-        Engine.recalculateDerivedStats();
-        UI.updateChatLog("Game loaded from previous save!");
-    } else {
-        const pData = await Engine.fetchGameData('player_base.json');
-        Engine.initPlayer(pData.base_stats);
-        UI.updateChatLog("Welcome to Infinite RPG. Press Explore Map to begin.");
-    }
-
-    updateUIDOM();
-}
+window.addEventListener("gameLoaded", () => {
+  updateUIDOM();
+  SaveSys.saveGameState(Engine.gameState);
+});

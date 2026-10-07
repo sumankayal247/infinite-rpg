@@ -8,10 +8,10 @@ let currentTheme = null;
 
 // Mock Opus tracks registry (pointing to placeholder wav for now to be playable)
 const AUDIO_REGISTRY = {
-    "hostile": "./assets/audio/default_bgm.wav",
-    "forest": "./assets/audio/default_bgm.wav",
-    "stone": "./assets/audio/default_bgm.wav",
-    "default": "./assets/audio/default_bgm.wav"
+    "hostile": "./assets/audio/default_bgm.opus",
+    "forest": "./assets/audio/default_bgm.opus",
+    "stone": "./assets/audio/default_bgm.opus",
+    "default": "./assets/audio/default_bgm.opus"
 };
 
 export function preloadAudio(scene) {

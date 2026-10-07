@@ -1,60 +1,137 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Infinite RPG</title>
     <!-- CSS -->
-    <link rel="stylesheet" href="css/styles.css">
-    
+    <link rel="stylesheet" href="css/styles.css" />
+
     <!-- Libraries -->
     <script src="https://js.puter.com/v2/"></script>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.js"></script>
-</head>
-<body>
+  </head>
+  <body>
     <!-- Mobile Hamburger Menu -->
     <button id="hamburger-menu" aria-label="Open Stats Menu">☰</button>
 
     <div id="game-wrapper">
-        <div id="phaser-container"></div>
-        
-        <aside id="stats-panel">
-            <h2>Player Stats</h2>
-            <div id="player-stats-display" style="margin-bottom: 20px;">
-                HP: <span id="stat-hp">100</span> / <span id="stat-maxhp">100</span><br>
-                Level: <span id="stat-lvl">1</span> (<span id="stat-xp">0</span> XP)<br>
-                Gold: <span id="stat-gold">0</span><br>
-            </div>
-            
-            <!-- Accessibility Options -->
-            <div id="a11y-controls">
-                <h3>Settings</h3>
-                <label><input type="checkbox" id="toggle-crt" checked> CRT Scanlines</label><br>
-                <label><input type="checkbox" id="toggle-text-scale"> Large Text</label><br>
-                <label><input type="checkbox" id="toggle-slow-type" checked> Slow Typing</label>
-            </div>
-        </aside>
-        
-        <div id="action-buttons-container">
-            <div id="action-buttons">
-                <button id="btn-explore" class="action-btn">Explore Map</button>
-                <button id="btn-attack" class="action-btn" style="display:none;">Attack</button>
-                <button id="btn-bribe" class="action-btn" style="display:none;">Bribe (10g)</button>
-                <button id="btn-steal" class="action-btn" style="display:none;">Pickpocket</button>
-                <button id="btn-flee" class="action-btn" style="display:none;">Flee</button>
-                <button id="btn-shop-buy" class="action-btn" style="display:none;">Buy Potion (25g)</button>
-                <button id="btn-shop-haggle" class="action-btn" style="display:none;">Haggle Price</button>
-                <button id="btn-smith-upgrade" class="action-btn" style="display:none;">Upgrade Weapon (50g)</button>
-                <button id="btn-leave" class="action-btn" style="display:none;">Leave</button>
-            </div>
+      <div id="phaser-container"></div>
+
+      <aside id="stats-panel">
+        <h2>Player Stats</h2>
+        <div id="player-stats-display" style="margin-bottom: 10px">
+          HP: <span id="stat-hp">100</span> / <span id="stat-maxhp">100</span
+          ><br />
+          Level: <span id="stat-lvl">1</span> (<span id="stat-xp">0</span>
+          XP)<br />
+          Gold: <span id="stat-gold">0</span><br />
         </div>
-        
-        <section id="chat-log">
-            <!-- AI narrative goes here -->
-        </section>
+
+        <div
+          id="equipment-panel"
+          style="
+            margin-bottom: 10px;
+            font-size: 0.9em;
+            border: 1px solid #225522;
+            padding: 5px;
+          "
+        >
+          <strong>Equipment</strong><br />
+          WPN: <span id="eq-weapon">None</span><br />
+          AMR: <span id="eq-armor">None</span><br />
+          ACC: <span id="eq-accessory">None</span>
+        </div>
+
+        <div
+          id="inventory-panel"
+          style="
+            margin-bottom: 20px;
+            font-size: 0.9em;
+            border: 1px solid #225522;
+            padding: 5px;
+            max-height: 100px;
+            overflow-y: auto;
+          "
+        >
+          <strong>Inventory</strong>
+          <ul id="inv-list" style="margin: 0; padding-left: 20px"></ul>
+        </div>
+        <div
+          id="quest-panel"
+          style="
+            margin-bottom: 20px;
+            font-size: 0.9em;
+            border: 1px solid #225522;
+            padding: 5px;
+            max-height: 100px;
+            overflow-y: auto;
+          "
+        >
+          <strong>Active Quests</strong>
+          <ul id="quest-list" style="margin: 0; padding-left: 20px; color: #ffaa00"></ul>
+        </div>
+
+        <!-- Accessibility Options -->
+        <div id="a11y-controls">
+          <h3>Settings</h3>
+          <label
+            ><input type="checkbox" id="toggle-crt" checked /> CRT
+            Scanlines</label
+          ><br />
+          <label
+            ><input type="checkbox" id="toggle-text-scale" /> Large Text</label
+          ><br />
+          <label
+            ><input type="checkbox" id="toggle-slow-type" checked /> Slow
+            Typing</label
+          >
+        </div>
+      </aside>
+
+      <div id="action-buttons-container">
+        <div id="action-buttons">
+          <button id="btn-explore" class="action-btn">Explore Map</button>
+          <button id="btn-attack" class="action-btn" style="display: none">
+            Attack
+          </button>
+          <button id="btn-bribe" class="action-btn" style="display: none">
+            Bribe (10g)
+          </button>
+          <button id="btn-steal" class="action-btn" style="display: none">
+            Pickpocket
+          </button>
+          <button id="btn-flee" class="action-btn" style="display: none">
+            Flee
+          </button>
+          <button id="btn-shop-buy" class="action-btn" style="display: none">
+            Buy Potion (25g)
+          </button>
+          <button id="btn-shop-gear" class="action-btn" style="display: none">
+            Buy Gear (75g)
+          </button>
+          <button id="btn-shop-haggle" class="action-btn" style="display: none">
+            Haggle Price
+          </button>
+          <button
+            id="btn-smith-upgrade"
+            class="action-btn"
+            style="display: none"
+          >
+            Upgrade Weapon (50g)
+          </button>
+          <button id="btn-leave" class="action-btn" style="display: none">
+            Leave
+          </button>
+        </div>
+      </div>
+
+      <section id="chat-log">
+        <!-- AI narrative goes here -->
+      </section>
     </div>
 
     <!-- Game Scripts -->
     <script type="module" src="js/main.js"></script>
-</body>
+  </body>
 </html>

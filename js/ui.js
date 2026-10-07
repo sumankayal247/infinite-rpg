@@ -14,8 +14,8 @@ const THEME_COLORS = {
 
 export function preloadAssets(scene) {
     // Preload placeholder sprites
-    scene.load.image('base_enemy', './assets/sprites/base_enemy.png');
-    scene.load.image('default_bg', './assets/backgrounds/default_bg.png');
+    scene.load.image('base_enemy', './assets/sprites/base_enemy.avif');
+    scene.load.image('default_bg', './assets/backgrounds/default_bg.avif');
 }
 
 export function renderEnemyEncounter(scene, aiResponseJSON) {
