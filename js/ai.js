@@ -9,6 +9,60 @@ import { sanitizePlayerInput } from "./security.js";
 let fallbackData = null;
 let prefetchCache = {}; // Cache for Speculative Pre-fetching
 
+// Puter is lazy-loaded on first AI use (see index.html note).
+// No static <script> tag: its socket.io client never connects at boot,
+// so a dead/blocked network can't spam the console on page load.
+let puterLoadPromise = null;
+
+function ensurePuter(timeoutMs = 8000) {
+  try {
+    if (typeof puter !== "undefined" && puter && puter.ai && puter.ai.chat)
+      return Promise.resolve(true);
+  } catch {}
+  if (!puterLoadPromise) {
+    puterLoadPromise = new Promise((resolve) => {
+      let settled = false;
+      const done = (ok) => {
+        if (settled) return;
+        settled = true;
+        try {
+          if (typeof puter !== "undefined" && puter) puter.quiet = true;
+        } catch {}
+        resolve(ok);
+      };
+      try {
+        const s = document.createElement("script");
+        s.src = "https://js.puter.com/v2/";
+        s.async = true;
+        s.onload = () => done(true);
+        s.onerror = () => done(false);
+        document.head.appendChild(s);
+      } catch {
+        done(false);
+        return;
+      }
+      setTimeout(() => {
+        let ok = false;
+        try {
+          ok = typeof puter !== "undefined" && !!(puter && puter.ai);
+        } catch {}
+        done(ok);
+      }, timeoutMs);
+    });
+  }
+  return puterLoadPromise;
+}
+
+async function aiReady() {
+  try {
+    const ok = await ensurePuter();
+    if (!ok) return false;
+    return typeof puter !== "undefined" && !!(puter && puter.ai && puter.ai.chat);
+  } catch {
+    return false;
+  }
+}
+
 // Puter's realtime socket can fail on some networks (adblock, closed WS).
 // That failure lives inside puter's own library — the game stays playable
 // via fallback. Quiet the banner and cap every AI call with a timeout.
@@ -46,8 +100,8 @@ export async function generateEncounter(
     }
   }
 
-  if (typeof puter === "undefined") {
-    console.warn("Puter.js not available. Using Graceful Degradation.");
+  if (!(await aiReady())) {
+    console.warn("Puter.js unavailable (offline/blocked). Using fallback.");
     return getRandomFallback();
   }
 
@@ -149,7 +203,7 @@ export function manageMemory() {
 }
 
 export async function generateMysteryEvent(biome, level) {
-  if (typeof puter === "undefined") return getFallbackEvent();
+  if (!(await aiReady())) return getFallbackEvent();
   const safeBiome = sanitizePlayerInput(biome);
   const telemetry = getTelemetry();
   const history = (telemetry.recentEvents || []).join(". ");
@@ -175,7 +229,7 @@ export async function generateMysteryEvent(biome, level) {
 }
 
 export async function resolveMysteryEvent(eventDesc, choice, rollTotal) {
-  if (typeof puter === "undefined")
+  if (!(await aiReady()))
     return getFallbackResolution(choice, rollTotal);
 
   let rollContext =

@@ -8,8 +8,91 @@
     <link rel="stylesheet" href="css/styles.css" />
 
     <!-- Libraries -->
-    <script src="https://js.puter.com/v2/"></script>
+    <!-- NOTE: puter.js is lazy-loaded by js/ai.js on first AI call only.
+         It is NOT a static tag anymore, so its socket.io client never
+         opens a WebSocket on boot (no wss://api.puter.com errors at load).
+         The game is fully playable offline via fallback.json. -->
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.js"></script>
+    <script>
+      // Third-party noise containment (runs before everything else).
+      // Page-context content scripts from browser extensions (PageCloner,
+      // header tweakers, redirect blockers) and Puter's own socket client
+      // log errors we cannot patch at the source. Filter their known
+      // signatures so the console shows OUR errors only.
+      // Bypass with ?debug=1 or localStorage.infinite_rpg_debug=1.
+      (function () {
+        var BENIGN = [
+          /socket\.io/i,
+          /wss:\/\/api\.puter\.com/i,
+          /websocket.*closed before/i,
+          /unsafe header.*origin/i,
+          /minified react error/i,
+          /pagecloner/i,
+          /redirect blocker/i,
+          /ajaxrequestinterceptor/i,
+        ];
+        function debugOn() {
+          try {
+            return (
+              location.search.indexOf("debug=1") !== -1 ||
+              localStorage.getItem("infinite_rpg_debug") === "1"
+            );
+          } catch (e) {
+            return false;
+          }
+        }
+        function textOf(a) {
+          try {
+            return Array.prototype.map
+              .call(a, function (x) {
+                if (x instanceof Error) return x.message + "\n" + x.stack;
+                return typeof x === "string" ? x : JSON.stringify(x);
+              })
+              .join(" ");
+          } catch (e) {
+            return "";
+          }
+        }
+        var hidden = 0;
+        function benign(msg) {
+          return BENIGN.some(function (re) {
+            return re.test(msg);
+          });
+        }
+        ["error", "warn"].forEach(function (m) {
+          var orig = console[m].bind(console);
+          console[m] = function () {
+            if (!debugOn() && benign(textOf(arguments))) {
+              hidden++;
+              return;
+            }
+            return orig.apply(null, arguments);
+          };
+        });
+        window.addEventListener(
+          "error",
+          function (e) {
+            var msg = (e.message || "") + " " + ((e.error && e.error.stack) || "");
+            if (!debugOn() && benign(msg)) {
+              hidden++;
+              e.preventDefault();
+            }
+          },
+          true,
+        );
+        window.addEventListener("unhandledrejection", function (e) {
+          var r = e.reason;
+          var msg = r instanceof Error ? r.message + "\n" + r.stack : String(r);
+          if (!debugOn() && benign(msg)) {
+            hidden++;
+            e.preventDefault();
+          }
+        });
+        window.__thirdPartyHidden = function () {
+          return hidden;
+        };
+      })();
+    </script>
   </head>
   <body>
     <!-- Mobile Hamburger Menu -->
