@@ -9,6 +9,9 @@ export default class BootScene extends Phaser.Scene {
     super("BootScene");
   }
   preload() {
+    try {
+      if (typeof puter !== "undefined" && puter) puter.quiet = true;
+    } catch {}
     AI.loadFallbackData();
     UI.preloadAssets(this);
     AudioSys.preloadAudio(this);

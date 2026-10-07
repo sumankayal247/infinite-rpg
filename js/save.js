@@ -8,12 +8,37 @@ const TELEMETRY_KEY = "infinite_rpg_telemetry";
 const SAVE_VERSION = 1.0;
 
 export function saveGameState(state) {
-  const saveData = {
-    save_version: SAVE_VERSION,
-    timestamp: Date.now(),
-    state,
+  // Serialize plain data ONLY. gameState also holds live Phaser objects
+  // (phaserGame, phaserScene) which contain Window refs and crash
+  // JSON.stringify with "Converting circular structure to JSON".
+  try {
+    const saveData = {
+      save_version: SAVE_VERSION,
+      timestamp: Date.now(),
+      state: pickSerializable(state),
+    };
+    localStorage.setItem(SAVE_KEY, JSON.stringify(saveData));
+  } catch (e) {
+    console.warn("Save failed (non-fatal, game continues):", e);
+  }
+}
+
+// Whitelist of JSON-safe fields. currentWorld is excluded on purpose:
+// it regenerates deterministically from runSeed on load.
+function pickSerializable(state) {
+  return {
+    player: state.player,
+    enemy: state.enemy,
+    combat: state.combat,
+    mode: state.mode,
+    shopDiscount: state.shopDiscount,
+    runSeed: state.runSeed,
+    quests: state.quests ?? null,
+    map: {
+      currentNode: state.map?.currentNode ?? null,
+      choices: state.map?.choices ?? [],
+    },
   };
-  localStorage.setItem(SAVE_KEY, JSON.stringify(saveData));
 }
 
 export function loadGameState() {

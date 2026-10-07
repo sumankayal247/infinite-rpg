@@ -9,6 +9,17 @@ import { sanitizePlayerInput } from "./security.js";
 let fallbackData = null;
 let prefetchCache = {}; // Cache for Speculative Pre-fetching
 
+// Puter's realtime socket can fail on some networks (adblock, closed WS).
+// That failure lives inside puter's own library — the game stays playable
+// via fallback. Quiet the banner and cap every AI call with a timeout.
+function chatWithTimeout(prompt, ms = 12000) {
+  const call = puter.ai.chat(prompt);
+  const timeout = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error("AI timeout — using fallback")), ms),
+  );
+  return Promise.race([call, timeout]);
+}
+
 export async function loadFallbackData() {
   try {
     const response = await fetch("./assets/data/fallback.json");
@@ -48,7 +59,7 @@ export async function generateEncounter(
   const prompt = `Context: HP:${playerHp}, STR:${playerStr}, Level:${playerLevel}, Biome:${safeBiome}. Recent history: ${history}. Task: Generate an encounter that logically follows the history if relevant. Respond ONLY with the raw JSON object. Do not add conversational text. The 'desc' must be a single concise paragraph. Format: {"name": "string", "desc": "string", "visual_theme": "string", "is_hostile": boolean}`;
 
   try {
-    const response = await puter.ai.chat(prompt);
+    const response = await chatWithTimeout(prompt);
     // Puter API might return an object with a toString method or a message property
     let responseText =
       typeof response === "string"
@@ -145,7 +156,7 @@ export async function generateMysteryEvent(biome, level) {
   const prompt = `Context: Biome:${safeBiome}, Level:${level}. Recent history: ${history}. Task: Generate a mysterious RPG event that builds upon the recent history if possible. Respond ONLY with raw JSON. No markdown backticks, no conversation. The 'choices' array must have 2-3 items. Format: {"title":"string","desc":"string","choices":[{"id":"c1","text":"string","stat_check":"STR|AGI|INT|CHA|NONE"}]}`;
 
   try {
-    const response = await puter.ai.chat(prompt);
+    const response = await chatWithTimeout(prompt);
     let responseText =
       typeof response === "string"
         ? response
@@ -174,7 +185,7 @@ export async function resolveMysteryEvent(eventDesc, choice, rollTotal) {
   const prompt = `Context: Event was "${eventDesc}". Player chose "${choice.text}". ${rollContext} Task: Resolve the event. Respond ONLY with raw JSON. No markdown, no conversation. Consequence fields should be positive or negative numbers (or 0). Format: {"desc":"string","consequence":{"hp_change":number,"gold_change":number,"xp_change":number,"new_quest":"string (optional)"}}`;
 
   try {
-    const response = await puter.ai.chat(prompt);
+    const response = await chatWithTimeout(prompt);
     let responseText =
       typeof response === "string"
         ? response

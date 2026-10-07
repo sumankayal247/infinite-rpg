@@ -70,10 +70,23 @@ export default class MainMenuScene extends Phaser.Scene {
       UI.updateChatLog("Welcome to Infinite RPG. A new journey begins.");
     } else {
       const saved = SaveSys.loadGameState();
-      if (saved && saved.state) {
-        Object.assign(Engine.gameState, saved.state);
+      const sp = saved?.state?.player;
+      if (saved && saved.state && sp && sp.baseStats) {
+        // Restore plain data only — never whole gameState (it holds
+        // live Phaser objects with circular Window refs).
+        Engine.gameState.player = sp;
+        if (saved.state.runSeed) Engine.gameState.runSeed = saved.state.runSeed;
+        if (typeof saved.state.shopDiscount === "number")
+          Engine.gameState.shopDiscount = saved.state.shopDiscount;
+        if (saved.state.quests) Engine.gameState.quests = saved.state.quests;
+        Engine.gameState.enemy = null;
         Engine.recalculateDerivedStats();
         UI.updateChatLog("Game loaded from previous save!");
+      } else {
+        // No usable save — start fresh instead of crashing
+        const pData = await Engine.fetchGameData("player_base.json");
+        Engine.initPlayer(pData.base_stats);
+        UI.updateChatLog("Welcome to Infinite RPG. A new journey begins.");
       }
     }
 
