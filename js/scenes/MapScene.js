@@ -1,17 +1,22 @@
 import * as Engine from "../engine.js";
 import * as MapSys from "../map.js";
 import * as UI from "../ui.js";
+import { GB, tileColor, drawTileDetail, describeWorld } from "../gb.js";
 
-// Single visual source: ASCII drawn INSIDE Phaser.
-// DOM <pre> is screen-reader fallback only (visually hidden in CSS).
-const MAP_PX = { x: 80, y: 70, w: 640, h: 380 };
-const TITLE_Y = 30;
+// Game Boy presentation over the deterministic engine layout.
+// Canvas 800x600. Screen rect centered, square-ish tiles.
+const SCREEN = { x: 150, y: 80, w: 500, h: 380 };
+const TITLE_Y = 28;
 const HINT_Y = 560;
 
 function gridToPixels(col, row, world) {
+  const cellW = SCREEN.w / world.w;
+  const cellH = SCREEN.h / world.h;
   return {
-    x: MAP_PX.x + (col / (world.w - 1)) * MAP_PX.w,
-    y: MAP_PX.y + (row / (world.h - 1)) * MAP_PX.h,
+    x: SCREEN.x + (col + 0.5) * cellW,
+    y: SCREEN.y + (row + 0.5) * cellH,
+    cellW,
+    cellH,
   };
 }
 
@@ -37,85 +42,150 @@ export default class MapScene extends Phaser.Scene {
     return world;
   }
 
-  drawAscii(world, footer) {
-    this.children.removeAll();
-    // Title (single, above map — no overlap)
+  drawBezel() {
+    // GB body: dark frame around light screen
+    this.add.rectangle(400, 300, 560, 460, GB.DARKEST).setOrigin(0.5);
+    this.add
+      .rectangle(
+        SCREEN.x + SCREEN.w / 2,
+        SCREEN.y + SCREEN.h / 2,
+        SCREEN.w + 16,
+        SCREEN.h + 16,
+        GB.DARK,
+      )
+      .setOrigin(0.5);
+    this.add
+      .rectangle(
+        SCREEN.x + SCREEN.w / 2,
+        SCREEN.y + SCREEN.h / 2,
+        SCREEN.w,
+        SCREEN.h,
+        GB.LIGHTEST,
+      )
+      .setOrigin(0.5);
+  }
+
+  drawTiles(world) {
+    const cellW = SCREEN.w / world.w;
+    const cellH = SCREEN.h / world.h;
+    const s = Math.min(cellW, cellH);
+    for (let row = 0; row < world.h; row++) {
+      for (let col = 0; col < world.w; col++) {
+        const ch = world.grid[row][col];
+        const isBorder =
+          row === 0 || row === world.h - 1 || col === 0 || col === world.w - 1;
+        const px = SCREEN.x + col * cellW;
+        const py = SCREEN.y + row * cellH;
+        // base tile
+        this.add
+          .rectangle(
+            px + cellW / 2,
+            py + cellH / 2,
+            cellW - 0.5,
+            cellH - 0.5,
+            tileColor(ch),
+          )
+          .setOrigin(0.5);
+        drawTileDetail(this, ch, px, py, s, isBorder);
+      }
+    }
+  }
+
+  drawActor(col, row, world, kind) {
+    const { x, y, cellW } = gridToPixels(col, row, world);
+    const r = Math.max(7, cellW * 0.9);
+    if (kind === "player") {
+      // pixel hero: dark body, light face
+      this.add.circle(x, y, r, GB.DARKEST);
+      this.add.circle(x, y - 1, r * 0.45, GB.LIGHTEST);
+    } else {
+      // boss: dark skull block with light eyes
+      this.add.rectangle(x, y, r * 1.7, r * 1.7, GB.DARKEST).setOrigin(0.5);
+      this.add.rectangle(x - 3, y - 1, 3, 3, GB.LIGHTEST).setOrigin(0.5);
+      this.add.rectangle(x + 3, y - 1, 3, 3, GB.LIGHTEST).setOrigin(0.5);
+      this.add
+        .text(x, y - r - 8, "BOSS", {
+          fontFamily: "Courier",
+          fontSize: "11px",
+          color: GB.CSS.DARKEST,
+          fontStyle: "bold",
+        })
+        .setOrigin(0.5);
+    }
+  }
+
+  drawChrome(world, footer) {
     this.add
       .text(400, TITLE_Y, "WORLD MAP", {
         fontFamily: "Courier",
-        fontSize: "28px",
+        fontSize: "26px",
         color: "#33ff33",
         fontStyle: "bold",
       })
       .setOrigin(0.5, 0);
-
-    // ASCII canvas text — scaled to fill viewport
-    this.add
-      .text(400, MAP_PX.y + MAP_PX.h / 2, world.ascii, {
-        fontFamily: '"Courier New", Courier, monospace',
-        fontSize: "14px",
-        color: "#33ff33",
-        align: "left",
-        lineSpacing: 1,
-      })
-      .setOrigin(0.5);
-
-    // Footer: legend + region/seed + hint
     this.add
       .text(
         400,
         HINT_Y,
-        `${world.legend}\n-- ${world.region} | seed ${world.seed} --\n${footer}`,
+        `${world.region.toUpperCase()} | seed ${world.seed}\n${footer}`,
         {
           fontFamily: "Courier",
           fontSize: "13px",
           color: "#33ff33",
           align: "center",
-          lineSpacing: 2,
+          lineSpacing: 3,
         },
       )
       .setOrigin(0.5, 1);
+  }
 
-    // Accessible mirror (hidden visually)
-    UI.renderAsciiMap(
-      `WORLD MAP\n${world.ascii}\n${world.legend}\n${world.region} seed ${world.seed}. ${footer}`,
-    );
+  drawBase(world, footer) {
+    this.children.removeAll();
+    this.drawBezel();
+    this.drawTiles(world);
+    // actors: boss top-center, player bottom-center
+    const cx = Math.floor(world.w / 2);
+    this.drawActor(cx, 1, world, "boss");
+    this.drawActor(cx, world.h - 2, world, "player");
+    this.drawChrome(world, footer);
+    UI.renderAsciiMap(`World map. ${describeWorld(world)} ${footer}`);
   }
 
   showWorld() {
     const world = this.currentWorld();
-    this.drawAscii(world, "Press Explore Map");
+    this.drawBase(world, "Press Explore Map");
   }
 
   renderMap(nodes, onNodeClicked) {
     const world = this.currentWorld();
     const list = (world && world.nodes) || nodes;
-    this.drawAscii(world, "Choose: " + list.map((n) => n.type).join(" | "));
+    this.drawBase(
+      world,
+      "Choose: " + list.map((n) => n.type).join(" | "),
+    );
 
     list.forEach((node) => {
-      // Pin circles to the fork cells from ascii.js (col/row),
-      // fall back to even spacing if coords missing.
       const col = node.col ?? 24;
       const row = node.row ?? 9;
-      const { x, y } = gridToPixels(col, row, world);
+      const { x, y, cellW } = gridToPixels(col, row, world);
+      const R = Math.max(16, cellW * 2.2);
 
-      // Glow ring + node
-      this.add.circle(x, y, 34, 0x225522, 0.45);
+      this.add.circle(x, y, R + 4, GB.DARKEST);
       const circle = this.add
-        .circle(x, y, 22, this.getColor(node.type))
+        .circle(x, y, R, this.getColorHex(node.type))
         .setInteractive({ useHandCursor: true });
       this.add
         .text(x, y, this.getGlyph(node.type), {
           fontFamily: "Courier",
-          fontSize: "20px",
-          color: "#000000",
+          fontSize: "18px",
+          color: this.getGlyphColor(node.type),
           fontStyle: "bold",
         })
         .setOrigin(0.5);
       this.add
-        .text(x, y + 30, node.type, {
+        .text(x, y + R + 4, node.type, {
           fontFamily: "Courier",
-          fontSize: "13px",
+          fontSize: "12px",
           color: "#33ff33",
           backgroundColor: "#000000",
           padding: 2,
@@ -126,6 +196,8 @@ export default class MapScene extends Phaser.Scene {
         this.input.enabled = false;
         onNodeClicked(node);
       });
+      circle.on("pointerover", () => circle.setScale(1.12));
+      circle.on("pointerout", () => circle.setScale(1));
     });
     this.input.enabled = true;
   }
@@ -138,11 +210,16 @@ export default class MapScene extends Phaser.Scene {
     return "X";
   }
 
-  getColor(type) {
-    if (type === "Campfire") return 0xff8800; // Orange
-    if (type === "Shop") return 0xffff00; // Yellow
-    if (type === "Mystery") return 0xaa00ff; // Purple
-    if (type === "Elite Combat") return 0xff0000; // Red
-    return 0x33ff33; // Theme green for normal combat
+  getColorHex(type) {
+    if (type === "Campfire") return 0xff8800;
+    if (type === "Shop") return 0xffff00;
+    if (type === "Mystery") return 0xaa00ff;
+    if (type === "Elite Combat") return 0xff0000;
+    return 0x33ff33;
+  }
+
+  getGlyphColor(type) {
+    if (type === "Shop" || type === "Campfire") return "#000000";
+    return "#000000";
   }
 }
