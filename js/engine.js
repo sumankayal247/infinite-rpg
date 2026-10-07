@@ -143,9 +143,11 @@ export const gameState = {
         baseStats: null,
         derived: null,
         inventory: [],
-        equipment: { weapon: null, armor: null, accessory: null }
+        equipment: { weapon: null, armor: null, accessory: null },
+        statusEffects: []
     },
     enemy: null,
+    combat: { turnOrder: [], turnIndex: 0 },
     shopDiscount: 0,
     map: {
         currentNode: null,
@@ -199,9 +201,30 @@ export function damagePlayer(amount) {
     return gameState.player.hp <= 0; // true if dead
 }
 
-export function processCombatTurn(isPlayerFleeing = false) {
-    // Basic turn processor placeholder to abstract from main.js
+
+export function applyStatusEffect(entityId, effect) {
+    if (entityId === 'player') gameState.player.statusEffects.push(effect);
+    else if (gameState.enemy) gameState.enemy.statusEffects.push(effect);
 }
+
+export function processStatusEffects(entityId) {
+    const target = entityId === 'player' ? gameState.player : gameState.enemy;
+    if (!target) return { log: [] };
+
+    const result = tickStatusEffects(target.statusEffects || []);
+    target.statusEffects = result.active;
+    
+    let log = [];
+    if (result.totalDotDamage > 0) {
+        if (entityId === 'player') damagePlayer(result.totalDotDamage);
+        else damageEnemy(result.totalDotDamage);
+        log.push(`${target.name || 'You'} took ${result.totalDotDamage} damage from status effects.`);
+    }
+    result.expired.forEach(eff => log.push(`${eff.name} faded from ${target.name || 'You'}.`));
+    
+    return { log, isDead: target.hp <= 0 };
+}
+
 
 export function awardXP(amount) {
     gameState.player.xp += amount;

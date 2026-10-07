@@ -138,11 +138,16 @@ function onNodeSelected(node) {
     }
 }
 
-async function triggerCombat(wanted = false) {
+async function triggerCombat(isElite = false, isGuard = false) {
     Engine.setMode('COMBAT');
+    Object.values(btns).forEach(b => b.disabled = true);
     
     try {
-        let promptTheme = wanted ? "guard" : "random";
+        const regionNames = MapSys.getAvailableRegions(Engine.gameState.player.level);
+        const currentRegion = regionNames[regionNames.length - 1].name;
+        
+        let promptTheme = isGuard ? "guard" : (isElite ? "elite boss in " + currentRegion : currentRegion);
+        
         const encounter = await AI.generateEncounter(
             Engine.gameState.player.hp, 
             Engine.gameState.player.derived.attack, 
@@ -150,24 +155,43 @@ async function triggerCombat(wanted = false) {
             promptTheme
         );
 
-        const eName = wanted ? "City Guard" : encounter.name;
+        let eName = isGuard ? "City Guard" : encounter.name;
+        if (isElite && !isGuard) eName = "Elite " + eName;
         UI.updateChatLog(`Enemy Appeared! ${eName} - ${encounter.desc}`);
         
-        Engine.gameState.enemy = {
+        const multiplier = isElite ? 2 : 1;
+        Engine.setEnemy({
             name: eName,
-            hp: 20 * Engine.gameState.player.level,
-            maxHp: 20 * Engine.gameState.player.level,
-            derived: { attack: 5 + Engine.gameState.player.level, defense: 2, critChance: 0.05 },
-            greed: 10 + Math.floor(Math.random() * 20) // Random greed stat
-        };
+            hp: 20 * Engine.gameState.player.level * multiplier,
+            maxHp: 20 * Engine.gameState.player.level * multiplier,
+            agi: (5 + Math.floor(Engine.gameState.player.level / 2)) * multiplier,
+            statusEffects: [],
+            derived: { 
+                attack: (5 + Engine.gameState.player.level) * multiplier, 
+                defense: 2 * multiplier, 
+                critChance: 0.05 
+            },
+            greed: 10 + Math.floor(Math.random() * 20)
+        });
+        Engine.gameState.player.statusEffects = []; // Clear player status on new combat
+        
+        // Determine Initiative Turn Order
+        const turnOrder = Engine.determineTurnOrder([
+            { id: 'player', name: 'You', agi: Engine.gameState.player.baseStats.AGI },
+            { id: 'enemy', name: eName, agi: Engine.gameState.enemy.agi }
+        ]);
+        Engine.gameState.combat = { turnOrder, turnIndex: 0 };
+        
+        UI.updateChatLog(`Turn Order: ${turnOrder.map(t => t.name).join(" -> ")}`);
         
         UI.renderEnemyEncounter(Engine.gameState.phaserScene, encounter);
         AudioSys.playDynamicAudio(Engine.gameState.phaserScene, encounter);
+        
+        processTurnQueue();
     } catch (e) {
         UI.updateChatLog("Error generating enemy.");
+        updateUIDOM();
     }
-    btns.explore.disabled = false;
-    updateUIDOM();
 }
 
 
@@ -275,6 +299,70 @@ function returnToMap() {
 // ----------------------------------------------------
 // COMBAT & SKILLS LOGIC
 // ----------------------------------------------------
+function processTurnQueue() {
+    if (!Engine.gameState.enemy || Engine.gameState.mode !== 'COMBAT') return;
+    
+    let currentEntity = Engine.gameState.combat.turnOrder[Engine.gameState.combat.turnIndex];
+    
+    // Process DOT and Status Expiry
+    const statusResults = Engine.processStatusEffects(currentEntity.id);
+    statusResults.log.forEach(msg => UI.updateChatLog(msg));
+    
+    if (statusResults.isDead) {
+        handleDeath(currentEntity.id);
+        return;
+    }
+    
+    if (currentEntity.id === 'enemy') {
+        Object.values(btns).forEach(b => b.disabled = true);
+        setTimeout(() => enemyTurn(), 1000);
+    } else {
+        Object.values(btns).forEach(b => b.disabled = false);
+        updateUIDOM();
+    }
+}
+
+function advanceTurn() {
+    Engine.gameState.combat.turnIndex = (Engine.gameState.combat.turnIndex + 1) % Engine.gameState.combat.turnOrder.length;
+    processTurnQueue();
+}
+
+function handleDeath(entityId) {
+    if (entityId === 'player') {
+        UI.updateChatLog("YOU DIED. Game Over. Refresh to restart.");
+        Object.values(btns).forEach(b => b.disabled = true);
+        updateUIDOM();
+    } else {
+        UI.updateChatLog(`You defeated the ${Engine.gameState.enemy.name}!`);
+        Engine.awardGold(15);
+        Meta.trackEnemyDefeated();
+        if (Engine.awardXP(50)) {
+            UI.updateChatLog(`LEVEL UP! You are now Level ${Engine.gameState.player.level}!`);
+        }
+        returnToMap();
+    }
+}
+
+function enemyTurn() {
+    if (!Engine.gameState.enemy) return;
+
+    let eDmgRoll = Engine.calculateDamage(Engine.gameState.enemy.derived, Engine.gameState.player.derived);
+    Engine.damagePlayer(eDmgRoll.damage);
+    UI.updateChatLog(`${Engine.gameState.enemy.name} hit you for ${eDmgRoll.damage} damage!`);
+
+    // 25% chance for enemy to poison
+    if (Math.random() < 0.25) {
+        Engine.applyStatusEffect('player', { name: "Poison", duration: 3, dot: 5 });
+        UI.updateChatLog(`You were poisoned by ${Engine.gameState.enemy.name}!`);
+    }
+
+    if (Engine.gameState.player.hp <= 0) {
+        handleDeath('player');
+        return;
+    }
+    advanceTurn();
+}
+
 function onAttack() {
     SaveSys.trackPlayerChoice("Attack");
     if (!Engine.gameState.enemy) return;
@@ -283,44 +371,45 @@ function onAttack() {
     Engine.damageEnemy(dmgRoll.damage);
     UI.updateChatLog(`You attacked ${Engine.gameState.enemy.name} for ${dmgRoll.damage} damage! ${dmgRoll.isCrit ? '(CRIT!)' : ''}`);
 
+    // 25% chance for player to cause bleed
+    if (Math.random() < 0.25) {
+        Engine.applyStatusEffect('enemy', { name: "Bleed", duration: 3, dot: 5 });
+        UI.updateChatLog(`${Engine.gameState.enemy.name} is bleeding!`);
+    }
+
     if (Engine.gameState.enemy.hp <= 0) {
-        UI.updateChatLog(`You defeated the ${Engine.gameState.enemy.name}!`);
-                Engine.awardGold(15);
-        Meta.trackEnemyDefeated();
-        if (Engine.awardXP(50)) {
-            UI.updateChatLog(`LEVEL UP! You are now Level ${Engine.gameState.player.level}!`);
-        }
-        returnToMap();
+        handleDeath('enemy');
         return;
     }
-    enemyTurn();
+    Object.values(btns).forEach(b => b.disabled = true);
+    advanceTurn();
 }
 
 function onFlee() {
     SaveSys.trackPlayerChoice("Flee");
-    // AGI Check to flee
     const check = Skills.performSkillCheck(Engine.gameState.player.baseStats.AGI, 10);
+    Object.values(btns).forEach(b => b.disabled = true);
     rollD20Animation(Engine.gameState.phaserScene, `FLEE D20: ${check.total}`, () => {
         if (check.success) {
             UI.updateChatLog("You successfully fled!");
             returnToMap();
         } else {
             UI.updateChatLog("Failed to flee!");
-            enemyTurn();
+            advanceTurn();
         }
     });
 }
 
 function onSteal() {
     SaveSys.trackPlayerChoice("Steal");
-    // AGI Check to Steal
     const check = Skills.performSkillCheck(Engine.gameState.player.baseStats.AGI, 15);
+    Object.values(btns).forEach(b => b.disabled = true);
     rollD20Animation(Engine.gameState.phaserScene, `STEAL D20: ${check.total}`, () => {
         if (check.success) {
             UI.updateChatLog("Successfully pickpocketed 30 Gold!");
             Engine.awardGold(30);
-            if (Engine.gameState.mode !== 'COMBAT') returnToMap(); // Evaded detection in shop
-            else updateUIDOM();
+            if (Engine.gameState.mode !== 'COMBAT') returnToMap(); 
+            else advanceTurn();
         } else {
             UI.updateChatLog("Caught stealing! The guards have been alerted!");
             Skills.wantedLevel++;
@@ -338,23 +427,12 @@ function onBribe() {
             returnToMap();
         } else {
             UI.updateChatLog(`${Engine.gameState.enemy.name} scoffed at your meager bribe!`);
-            enemyTurn();
+            Object.values(btns).forEach(b => b.disabled = true);
+            advanceTurn();
         }
     } else {
         UI.updateChatLog("Not enough gold to bribe.");
     }
-}
-
-function enemyTurn() {
-    let eDmgRoll = Engine.calculateDamage(Engine.gameState.enemy.derived, Engine.gameState.player.derived);
-    Engine.damagePlayer(eDmgRoll.damage);
-    UI.updateChatLog(`${Engine.gameState.enemy.name} hit you for ${eDmgRoll.damage} damage!`);
-
-    if (Engine.gameState.player.hp <= 0) {
-        UI.updateChatLog("YOU DIED. Game Over. Refresh to restart.");
-        Object.values(btns).forEach(b => b.disabled = true);
-    }
-    updateUIDOM();
 }
 
 // ----------------------------------------------------
