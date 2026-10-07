@@ -128,10 +128,29 @@ body.large-text {
     color: #000;
 }
 
-#a11y-controls {
+#settings-container {
     margin-top: 20px;
     border-top: 2px dashed var(--border-color);
     padding-top: 10px;
+}
+
+#settings-cog {
+    font-size: 24px;
+    display: inline-block;
+    transition: transform 0.3s ease;
+}
+
+#settings-cog.rotated {
+    transform: rotate(90deg);
+}
+
+#a11y-controls {
+    display: none;
+    margin-top: 10px;
+}
+
+#a11y-controls.open {
+    display: block;
 }
 
 /* Responsive Design */

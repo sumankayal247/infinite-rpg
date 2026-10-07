@@ -73,19 +73,16 @@
         </div>
 
         <!-- Accessibility Options -->
-        <div id="a11y-controls">
-          <h3>Settings</h3>
-          <label
-            ><input type="checkbox" id="toggle-crt" checked /> CRT
-            Scanlines</label
-          ><br />
-          <label
-            ><input type="checkbox" id="toggle-text-scale" /> Large Text</label
-          ><br />
-          <label
-            ><input type="checkbox" id="toggle-slow-type" checked /> Slow
-            Typing</label
-          >
+        <div id="settings-container">
+          <div id="settings-toggle" style="display: flex; align-items: center; cursor: pointer; gap: 8px;">
+            <span id="settings-cog">⚙️</span>
+            <h3 style="margin: 0;">Settings</h3>
+          </div>
+          <div id="a11y-controls">
+            <label><input type="checkbox" id="toggle-crt" checked /> CRT Scanlines</label><br />
+            <label><input type="checkbox" id="toggle-text-scale" /> Large Text</label><br />
+            <label><input type="checkbox" id="toggle-slow-type" checked /> Slow Typing</label>
+          </div>
         </div>
       </aside>
 

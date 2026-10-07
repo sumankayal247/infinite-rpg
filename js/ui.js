@@ -79,6 +79,17 @@ export function setupUIHooks() {
             isSlowTyping = e.target.checked;
         });
     }
+
+    // Settings Menu Toggle
+    const settingsToggle = document.getElementById('settings-toggle');
+    if (settingsToggle) {
+        settingsToggle.addEventListener('click', () => {
+            const cog = document.getElementById('settings-cog');
+            const controls = document.getElementById('a11y-controls');
+            if (cog) cog.classList.toggle('rotated');
+            if (controls) controls.classList.toggle('open');
+        });
+    }
 }
 
 export function updateChatLog(message) {
