@@ -134,3 +134,110 @@ export function calculateDamage(attackerDerived, defenderDerived) {
         isCrit: isCrit
     };
 }
+// --- GAME STATE & ACTIONS ---
+export const gameState = {
+    mode: 'MAP', // MAP, COMBAT, SHOP, SMITH
+    player: {
+        hp: 100, maxHp: 100,
+        level: 1, xp: 0, gold: 50,
+        baseStats: null,
+        derived: null,
+        inventory: [],
+        equipment: { weapon: null, armor: null, accessory: null }
+    },
+    enemy: null,
+    shopDiscount: 0,
+    map: {
+        currentNode: null,
+        choices: []
+    }
+};
+
+export function setMode(newMode) {
+    gameState.mode = newMode;
+}
+
+export function setEnemy(enemyData) {
+    gameState.enemy = enemyData;
+}
+
+export function awardGold(amount) {
+    gameState.player.gold += amount;
+}
+
+export function spendGold(amount) {
+    if (gameState.player.gold >= amount) {
+        gameState.player.gold -= amount;
+        return true;
+    }
+    return false;
+}
+
+export function healPlayer(amount) {
+    gameState.player.hp = Math.min(gameState.player.maxHp, gameState.player.hp + amount);
+}
+
+export function upgradeBaseStat(stat, amount) {
+    gameState.player.baseStats[stat] += amount;
+    recalculateDerivedStats();
+}
+
+export function recalculateDerivedStats() {
+    const equipArray = Object.values(gameState.player.equipment).filter(e => e !== null);
+    gameState.player.derived = deriveStats(gameState.player.baseStats, equipArray);
+    gameState.player.maxHp = gameState.player.derived.maxHp;
+    if (gameState.player.hp > gameState.player.maxHp) gameState.player.hp = gameState.player.maxHp;
+}
+
+export function damageEnemy(amount) {
+    gameState.enemy.hp -= amount;
+    return gameState.enemy.hp <= 0; // true if dead
+}
+
+export function damagePlayer(amount) {
+    gameState.player.hp -= amount;
+    return gameState.player.hp <= 0; // true if dead
+}
+
+export function processCombatTurn(isPlayerFleeing = false) {
+    // Basic turn processor placeholder to abstract from main.js
+}
+
+export function awardXP(amount) {
+    gameState.player.xp += amount;
+    let levelCheck = checkLevelUp(gameState.player.level, gameState.player.xp);
+    if (levelCheck.leveledUp) {
+        gameState.player.level = levelCheck.newLevel;
+        gameState.player.xp = levelCheck.remainingXp;
+        // Basic static growth for now
+        gameState.player.baseStats.STR += 2;
+        gameState.player.baseStats.VIT += 2;
+        recalculateDerivedStats();
+        // Fully heal on level up
+        gameState.player.hp = gameState.player.maxHp;
+        return true;
+    }
+    return false;
+}
+
+export function initPlayer(baseStats) {
+    gameState.player.baseStats = baseStats;
+    recalculateDerivedStats();
+    gameState.player.hp = gameState.player.maxHp;
+}
+
+export function equipItem(item) {
+    if (!item || !item.slot) return;
+    
+    if (gameState.player.equipment[item.slot]) {
+        gameState.player.inventory.push(gameState.player.equipment[item.slot]);
+    }
+    
+    gameState.player.inventory = gameState.player.inventory.filter(i => i.id !== item.id);
+    gameState.player.equipment[item.slot] = item;
+    recalculateDerivedStats();
+}
+
+export function addToInventory(item) {
+    gameState.player.inventory.push(item);
+}

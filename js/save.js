@@ -7,12 +7,11 @@ const SAVE_KEY = 'infinite_rpg_save';
 const TELEMETRY_KEY = 'infinite_rpg_telemetry';
 const SAVE_VERSION = 1.0;
 
-export function saveGameState(playerData, inventory) {
+export function saveGameState(state) {
     const saveData = {
         save_version: SAVE_VERSION,
         timestamp: Date.now(),
-        playerData,
-        inventory
+        state
     };
     localStorage.setItem(SAVE_KEY, JSON.stringify(saveData));
 }
