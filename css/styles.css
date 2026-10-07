@@ -38,21 +38,16 @@ body {
 }
 
 #ascii-map {
+    /* Screen-reader / no-WebGL fallback only — Phaser is the visual source */
     position: absolute;
-    inset: 0;
-    margin: 0;
-    padding: 12px;
-    font-family: 'Courier New', Courier, monospace;
-    font-size: 12px;
-    line-height: 1.35;
-    letter-spacing: 1px;
-    color: var(--text-color);
-    text-shadow: 0 0 6px rgba(51, 255, 51, 0.65);
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
     white-space: pre;
-    overflow: auto;
-    pointer-events: none;
-    z-index: 20;
-    background: rgba(0, 0, 0, 0.88);
+    border: 0;
 }
 
 #ascii-map:empty { display: none; }
