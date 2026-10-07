@@ -15,6 +15,19 @@ export default class MapScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
   }
+
+  resetMap() {
+    this.children.removeAll();
+    this.add.image(400, 300, "default_bg").setTint(0x333333);
+    this.add
+      .text(400, 50, "WORLD MAP", {
+        fontFamily: "Courier",
+        fontSize: "32px",
+        color: "#fff",
+      })
+      .setOrigin(0.5);
+  }
+
   renderMap(nodes, onNodeClicked) {
     this.children.removeAll();
     this.add.image(400, 300, "default_bg").setTint(0x333333);

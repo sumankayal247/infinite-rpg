@@ -372,6 +372,7 @@ function returnToMap() {
   Engine.setMode("MAP");
   Engine.gameState.enemy = null;
   const s = switchScene("MapScene");
+  if (s && s.resetMap) s.resetMap();
   AudioSys.playDynamicAudio(s, { is_hostile: false, visual_theme: "default" });
   updateUIDOM();
   SaveSys.saveGameState(Engine.gameState);
