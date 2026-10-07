@@ -98,3 +98,55 @@ export function manageMemory() {
         }
     }
 }
+
+export async function generateMysteryEvent(biome, level) {
+    if (typeof puter === 'undefined') return getFallbackEvent();
+    const safeBiome = sanitizePlayerInput(biome);
+    const prompt = `Context: Biome:${safeBiome}, Level:${level}. Task: Generate a mysterious RPG event. Respond ONLY with raw JSON. No markdown backticks, no conversation. The 'choices' array must have 2-3 items. Format: {"title":"string","desc":"string","choices":[{"id":"c1","text":"string","stat_check":"STR|AGI|INT|CHA|NONE"}]}`;
+    
+    try {
+        const response = await puter.ai.chat(prompt);
+        let responseText = typeof response === 'string' ? response : (response.message?.content || response.toString());
+        let cleanJson = responseText.replace(/```json/gi, '').replace(/```/g, '').trim();
+        return JSON.parse(cleanJson);
+    } catch (e) {
+        console.error("Mystery generation failed.", e);
+        return getFallbackEvent();
+    }
+}
+
+export async function resolveMysteryEvent(eventDesc, choice, rollTotal) {
+    if (typeof puter === 'undefined') return getFallbackResolution(choice, rollTotal);
+    
+    let rollContext = rollTotal !== null ? `They rolled a D20 stat check and got a total of ${rollTotal}.` : `No stat check was required.`;
+    const prompt = `Context: Event was "${eventDesc}". Player chose "${choice.text}". ${rollContext} Task: Resolve the event. Respond ONLY with raw JSON. No markdown, no conversation. Consequence fields should be positive or negative numbers (or 0). Format: {"desc":"string","consequence":{"hp_change":number,"gold_change":number,"xp_change":number}}`;
+    
+    try {
+        const response = await puter.ai.chat(prompt);
+        let responseText = typeof response === 'string' ? response : (response.message?.content || response.toString());
+        let cleanJson = responseText.replace(/```json/gi, '').replace(/```/g, '').trim();
+        return JSON.parse(cleanJson);
+    } catch (e) {
+        console.error("Mystery resolution failed.", e);
+        return getFallbackResolution(choice, rollTotal);
+    }
+}
+
+function getFallbackEvent() {
+    return {
+        title: "Mysterious Statue",
+        desc: "A weathered weeping angel statue holding a glowing ruby in its outstretched hand.",
+        choices: [
+            { id: "c1", text: "Snatch the ruby", stat_check: "AGI" },
+            { id: "c2", text: "Leave it alone", stat_check: "NONE" }
+        ]
+    };
+}
+
+function getFallbackResolution(choice, rollTotal) {
+    if (choice.stat_check !== "NONE") {
+        if (rollTotal < 12) return { desc: "You tripped a trap! The statue crushed your hand.", consequence: { hp_change: -10, gold_change: 0, xp_change: 5 } };
+        else return { desc: "Swiftly, you snatched the ruby before the trap snapped shut!", consequence: { hp_change: 0, gold_change: 50, xp_change: 20 } };
+    }
+    return { desc: "You walk away safely, but feel you missed an opportunity.", consequence: { hp_change: 0, gold_change: 0, xp_change: 0 } };
+}

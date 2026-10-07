@@ -61,6 +61,8 @@ function updateUIDOM() {
     } else if (Engine.gameState.mode === 'SMITH') {
         btns.upgrade.style.display = 'block';
         btns.leave.style.display = 'block';
+    } else if (Engine.gameState.mode === 'MYSTERY') {
+        // dynamic .map-node-btn handle themselves
     }
 }
 
@@ -130,8 +132,7 @@ function onNodeSelected(node) {
         Engine.gameState.phaserScene.add.image(400, 300, 'blacksmith').setScale(4);
         updateUIDOM();
     } else if (node.type === "Mystery") {
-        UI.updateChatLog("You encounter a mystery! (Nothing happens yet)");
-        returnToMap();
+        triggerMystery();
     } else {
         triggerCombat(node.type === "Elite Combat");
     }
@@ -167,6 +168,100 @@ async function triggerCombat(wanted = false) {
     }
     btns.explore.disabled = false;
     updateUIDOM();
+}
+
+
+// ----------------------------------------------------
+// MYSTERY EVENT LOGIC
+// ----------------------------------------------------
+async function triggerMystery() {
+    Engine.setMode('MYSTERY');
+    updateUIDOM();
+    UI.updateChatLog("Approaching a point of interest...");
+
+    const regionNames = MapSys.getAvailableRegions(Engine.gameState.player.level);
+    const currentRegion = regionNames[regionNames.length - 1].name;
+
+    try {
+        const eventData = await AI.generateMysteryEvent(currentRegion, Engine.gameState.player.level);
+        UI.updateChatLog(`--- ${eventData.title} ---`);
+        UI.updateChatLog(eventData.desc);
+
+        const container = document.getElementById('action-buttons');
+        document.querySelectorAll('.map-node-btn').forEach(b => b.remove());
+
+        eventData.choices.forEach((choice) => {
+            const btn = document.createElement('button');
+            btn.className = 'action-btn map-node-btn';
+            btn.innerText = choice.text + (choice.stat_check !== 'NONE' ? ` [${choice.stat_check}]` : '');
+            btn.onclick = () => onMysteryChoice(eventData, choice);
+            container.appendChild(btn);
+        });
+    } catch(e) {
+        UI.updateChatLog("The mystery vanishes before your eyes...");
+        returnToMap();
+    }
+}
+
+async function onMysteryChoice(eventData, choice) {
+    document.querySelectorAll('.map-node-btn').forEach(b => b.disabled = true);
+    
+    let rollTotal = null;
+    let isSuccess = null;
+
+    if (choice.stat_check !== 'NONE' && Engine.gameState.player.baseStats[choice.stat_check]) {
+        const statVal = Engine.gameState.player.baseStats[choice.stat_check];
+        const check = Skills.performSkillCheck(statVal, 10 + Engine.gameState.player.level);
+        rollTotal = check.total;
+        isSuccess = check.success;
+        UI.updateChatLog(`Rolling ${choice.stat_check}... Rolled a ${check.roll} + ${statVal} = ${rollTotal}.`);
+        
+        await new Promise(resolve => rollD20Animation(Engine.gameState.phaserScene, `D20: ${rollTotal}`, resolve));
+    } else {
+        UI.updateChatLog(`You chose: ${choice.text}`);
+    }
+
+    UI.updateChatLog("Resolving outcome...");
+
+    const outcome = await AI.resolveMysteryEvent(eventData.desc, choice, rollTotal);
+    UI.updateChatLog(outcome.desc);
+
+    if (outcome.consequence) {
+        if (outcome.consequence.hp_change) {
+            if (outcome.consequence.hp_change > 0) Engine.healPlayer(outcome.consequence.hp_change);
+            else {
+                const died = Engine.damagePlayer(Math.abs(outcome.consequence.hp_change));
+                if (died) {
+                    UI.updateChatLog("YOU DIED from the event! Game Over. Refresh to restart.");
+                    updateUIDOM();
+                    return;
+                }
+            }
+        }
+        if (outcome.consequence.gold_change) {
+            if (outcome.consequence.gold_change > 0) Engine.awardGold(outcome.consequence.gold_change);
+            else Engine.spendGold(Math.abs(outcome.consequence.gold_change));
+        }
+        if (outcome.consequence.xp_change && outcome.consequence.xp_change > 0) {
+            if (Engine.awardXP(outcome.consequence.xp_change)) {
+                UI.updateChatLog(`LEVEL UP! You are now Level ${Engine.gameState.player.level}!`);
+            }
+        }
+    }
+
+    updateUIDOM();
+    
+    // Continue Button
+    const container = document.getElementById('action-buttons');
+    document.querySelectorAll('.map-node-btn').forEach(b => b.remove());
+    const btn = document.createElement('button');
+    btn.className = 'action-btn map-node-btn';
+    btn.innerText = "Continue Adventure";
+    btn.onclick = () => {
+        document.querySelectorAll('.map-node-btn').forEach(b => b.remove());
+        returnToMap();
+    };
+    container.appendChild(btn);
 }
 
 function returnToMap() {
