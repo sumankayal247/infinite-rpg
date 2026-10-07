@@ -28,7 +28,7 @@ export async function generateEncounter(playerHp, playerStr, playerLevel, biome)
     // Phase 6: Prompt Injection Protection
     const safeBiome = sanitizePlayerInput(biome);
 
-    const prompt = `Context: HP:${playerHp}, STR:${playerStr}, Level:${playerLevel}, Biome:${safeBiome}. Task: Generate an encounter. Respond ONLY in valid JSON format: {"name": "string", "desc": "string", "visual_theme": "string", "is_hostile": boolean}`;
+    const prompt = `Context: HP:${playerHp}, STR:${playerStr}, Level:${playerLevel}, Biome:${safeBiome}. Task: Generate an encounter. Respond ONLY with the raw JSON object. Do not add any conversational text or prefixes. The 'desc' must be a single concise paragraph. Format: {"name": "string", "desc": "string", "visual_theme": "string", "is_hostile": boolean}`;
 
     try {
         const response = await puter.ai.chat(prompt);
