@@ -106,22 +106,31 @@ class Backdrop extends Phaser.Scene {
 class MapS extends Phaser.Scene {
   d: any; nodes: any[] = []; sel = 0; reach: any[] = []; layer: any; token: any; sig = ""; hint: any; title: any; motes: any;
   constructor() { super("map"); }
-  init(d: any) {
+  private resolveDungeon(dungeonId?: string) {
     const S = getS();
-    const dungeonId = d?.dungeonId ?? S?.loc?.dungeon ?? "";
-    this.d = S?.dungeons?.[dungeonId] ?? null;
+    const id = dungeonId ?? S?.loc?.dungeon ?? this.d?.id ?? "";
+    return S?.dungeons?.[id] ?? null;
+  }
+  init(d: any) {
+    this.d = this.resolveDungeon(d?.dungeonId);
     this.sel = 0;
   }
   create() {
-    if (!this.d) {
+    const currentDungeon = this.resolveDungeon();
+    if (!currentDungeon) {
       const fallbackBg = D.biomes[D.regionMap[getS()?.loc?.region ?? "greenwood"]?.biome ?? "forest"].bg;
       addBg(this, fallbackBg, 0.5);
       this.hint = this.add.text(W / 2, H / 2, "Loading map…", ts(18, "#e8e1ff")).setOrigin(0.5).setDepth(10);
-      this.time.delayedCall(120, () => {
-        if (this.sys?.isActive()) this.scene.start("backdrop", { bg: fallbackBg });
+      this.time.delayedCall(160, () => {
+        const retry = this.resolveDungeon();
+        if (this.sys?.isActive() && retry) {
+          this.d = retry;
+          this.scene.restart({ dungeonId: retry.id });
+        }
       });
       return;
     }
+    this.d = currentDungeon;
     const biome = D.biomes[this.d.biome];
     addBg(this, biome.bg, 0.5);
     this.motes = new Particles(this, 40);
@@ -139,6 +148,9 @@ class MapS extends Phaser.Scene {
     this.layer.removeAll(true);
   }
   draw() {
+    const liveDungeon = this.resolveDungeon(this.d?.id ?? getS()?.loc?.dungeon ?? undefined);
+    this.d = liveDungeon ?? this.d ?? null;
+    if (!this.d) return;
     if (!this.layer) this.layer = this.add.container(0, 0).setDepth(5);
     this.clearLayer();
     const d = this.d;
@@ -429,15 +441,23 @@ export function createGame(parent: HTMLElement) {
     stage.playEvent = async () => {};
     stage.refresh = () => {};
     if (!booted) return;
-    setTimeout(() => {
+    const tryStart = (attempt = 0) => {
       try {
         const mgr = game.scene;
+        const target = pending.data?.dungeonId ?? data?.dungeonId ?? null;
+        if (name === "map" && target && !(getS()?.dungeons?.[target])) {
+          if (attempt < 8) {
+            setTimeout(() => tryStart(attempt + 1), 60);
+            return;
+          }
+        }
         for (const k of ["backdrop", "map", "combat"]) if (mgr.isActive(k) || mgr.isPaused(k) || mgr.isSleeping(k)) mgr.stop(k);
         mgr.start(pending.name, pending.data);
       } catch {
         // ignore transient scene restarts during a run reset
       }
-    }, 0);
+    };
+    setTimeout(tryStart, 0);
   };
   return game;
 }
