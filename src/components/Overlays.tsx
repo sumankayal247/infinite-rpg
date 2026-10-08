@@ -402,6 +402,12 @@ function LevelUp() {
 }
 function Victory() {
   const v = ui.victory!;
+  useEffect(() => {
+    const id = setTimeout(() => {
+      if (ui.modal === "victory") C.victoryContinue();
+    }, 2200);
+    return () => clearTimeout(id);
+  }, []);
   return (
     <Modal title="🏆 Victory!">
       <div className="grid g2"><div className="good">+{v.xp} XP</div><div className="gold">+{v.gold} gold</div></div>
