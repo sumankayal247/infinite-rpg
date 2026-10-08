@@ -1,7 +1,7 @@
 # Infinite RPG
 
 <div align="center">
-  <a href="https://sumankayal247.github.io/infinite-rpg/">
+  <a href="https://infinite-rpg-alpha.vercel.app">
     <img src="https://img.shields.io/badge/Play-%E2%96%B6-brightgreen?style=for-the-badge&logoColor=white" alt="Play Game" height="50">
   </a>
 </div>
