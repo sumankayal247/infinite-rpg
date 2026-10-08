@@ -106,7 +106,6 @@ class Backdrop extends Phaser.Scene {
 class MapS extends Phaser.Scene {
   d: any; nodes: any[] = []; sel = 0; reach: any[] = []; layer: any; token: any; sig = ""; hint: any; title: any; motes: any;
   constructor() { super("map"); }
-<<<<<<< HEAD
   init(d: any) {
     const S = getS();
     const dungeonId = d?.dungeonId ?? S?.loc?.dungeon ?? "";
@@ -123,10 +122,6 @@ class MapS extends Phaser.Scene {
       });
       return;
     }
-=======
-  init(d: any) { this.d = getS().dungeons[d.dungeonId]; this.sel = 0; }
-  create() {
->>>>>>> 2219ba96388b124d716af6a148afe12d86bf6ace
     const biome = D.biomes[this.d.biome];
     addBg(this, biome.bg, 0.5);
     this.motes = new Particles(this, 40);
