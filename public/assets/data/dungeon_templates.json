@@ -1,0 +1,42 @@
+{
+  "templates": {
+    "goblin_warren": { "name": "Goblin Warren", "biome": "cave", "faction": "goblins", "boss": "goblin_king", "families": ["goblin", "ooze", "beast"], "theme": "goblin", "tier": 1,
+      "knowledge": [ { "text": "Goblins fear fire and panic when their shaman falls.", "effect": "weak_fire" }, { "text": "The warren's rear tunnel is poorly guarded.", "effect": "ambush" } ] },
+    "bandit_hideout": { "name": "Bandit Hideout", "biome": "forest", "faction": "bandits", "boss": "bandit_chief", "families": ["bandit", "beast"], "theme": "bandit", "tier": 1,
+      "knowledge": [ { "text": "The chief is nursing a wound from a recent skirmish.", "effect": "boss_wounded" }, { "text": "The bandits' camp has an unguarded watchpost.", "effect": "ambush" } ] },
+    "spider_den": { "name": "Spider Den", "biome": "cave", "faction": "wildlife", "boss": "spider_queen", "families": ["spider", "beast", "ooze"], "theme": "spider", "tier": 2,
+      "knowledge": [ { "text": "Webs burn quickly; spiders hate fire.", "effect": "weak_fire" }, { "text": "The Queen is wounded; her egg-sac collapsed.", "effect": "boss_wounded" } ] },
+    "haunted_crypt": { "name": "Haunted Crypt", "biome": "crypt", "faction": "paleCourt", "boss": "lich", "families": ["undead", "cult", "ooze"], "theme": "undead", "tier": 3,
+      "knowledge": [ { "text": "The undead fear holy water and holy light.", "effect": "weak_holy" }, { "text": "The lich's phylactery is cracked.", "effect": "boss_wounded" } ] },
+    "frozen_keep": { "name": "Frozen Keep", "biome": "frost", "faction": "wildlife", "boss": "frostmaw", "families": ["beast", "elemental", "undead"], "theme": "frost", "tier": 3,
+      "knowledge": [ { "text": "Frost creatures are vulnerable to fire.", "effect": "weak_fire" }, { "text": "An old servant's stair bypasses the main hall.", "effect": "ambush" } ] },
+    "ember_forge": { "name": "Ember Forge", "biome": "ember", "faction": "cult", "boss": "cinderwing", "families": ["elemental", "construct", "beast"], "theme": "fire", "tier": 4,
+      "knowledge": [ { "text": "Fire spirits wither in cold; golems crack under frost.", "effect": "weak_cold" }, { "text": "The dragon is old and wounded from a past hunter.", "effect": "boss_wounded" } ] },
+    "cult_sanctum": { "name": "Cult Sanctum", "biome": "crypt", "faction": "cult", "boss": "high_priest", "families": ["cult", "undead", "elemental"], "theme": "cult", "tier": 4,
+      "knowledge": [ { "text": "The cult leader is not actually the final power here.", "effect": "ambush" }, { "text": "The cultists' protective wards fail against holy power.", "effect": "weak_holy" } ] },
+    "rift_gate": { "name": "Rift Gate", "biome": "cave", "faction": "rift", "boss": "starless_one", "families": ["rift", "cult", "undead"], "theme": "void", "tier": 5,
+      "knowledge": [ { "text": "The void recoils from holy light.", "effect": "weak_holy" } ] }
+  },
+  "procedural": {
+    "adj": ["Forgotten", "Whispering", "Hollow", "Sunken", "Crimson", "Gilded", "Bleak", "Ashen", "Verdant", "Shattered", "Moonlit", "Cursed"],
+    "noun": ["Barrow", "Hold", "Warren", "Spire", "Mine", "Vault", "Den", "Catacombs", "Grotto", "Redoubt", "Sanctum", "Depths"],
+    "templates": ["goblin_warren", "bandit_hideout", "spider_den", "haunted_crypt", "frozen_keep", "ember_forge", "cult_sanctum"]
+  },
+  "room_types": {
+    "combat": { "icon": "⚔", "label": "Skirmish", "color": "#d9534f" },
+    "elite": { "icon": "☠", "label": "Elite Foes", "color": "#ff7b00" },
+    "event": { "icon": "?", "label": "Mystery", "color": "#b197fc" },
+    "social": { "icon": "💬", "label": "Stranger", "color": "#74c0fc" },
+    "treasure": { "icon": "💰", "label": "Treasure", "color": "#ffd43b" },
+    "trap": { "icon": "⚠", "label": "Trapped Corridor", "color": "#ffa94d" },
+    "puzzle": { "icon": "🧩", "label": "Puzzle", "color": "#63e6be" },
+    "lore": { "icon": "📜", "label": "Lore Chamber", "color": "#e8d5a3" },
+    "rest": { "icon": "🔥", "label": "Campfire", "color": "#ff922b" },
+    "merchant": { "icon": "🛒", "label": "Wandering Merchant", "color": "#69db7c" },
+    "smith": { "icon": "🔨", "label": "Field Smith", "color": "#adb5bd" },
+    "prisoner": { "icon": "⛓", "label": "Prisoner", "color": "#a5d8ff" },
+    "secret": { "icon": "✦", "label": "Secret Room", "color": "#ff8cc8" },
+    "boss": { "icon": "👑", "label": "Boss", "color": "#ff3b30" },
+    "entrance": { "icon": "⛩", "label": "Entrance", "color": "#ced4da" }
+  }
+}

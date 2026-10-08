@@ -1,18 +1,37 @@
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
 
-# Virtual environments
-venv/
-env/
-ENV/
-env.bak/
-venv.bak/
+# testing
+/coverage
 
-# IDEs
-.vscode/
-.idea/
-infinite-rpg.md
-Task left.md
-scratch/
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# local env files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# vercel
+.vercel
+
+# typescript
+tsconfig.tsbuildinfo

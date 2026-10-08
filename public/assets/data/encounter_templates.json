@@ -1,0 +1,41 @@
+{
+  "social": [
+    { "id": "stranded_merchant", "title": "Stranded Merchant", "desc": "A merchant sits beside a broken wagon, hugging a strongbox.", "npc": "merchant", "stake": "A strongbox of wares", "tier": 1 },
+    { "id": "suspicious_guard", "title": "Suspicious Sentry", "desc": "A sentry bars the passage, eyeing your gear.", "npc": "guard", "stake": "Safe passage", "tier": 1 },
+    { "id": "wounded_scout", "title": "Wounded Scout", "desc": "A scout lies bleeding, clutching a sealed report.", "npc": "scout", "stake": "A sealed report", "tier": 1 },
+    { "id": "drunk_noble", "title": "Drunken Noble", "desc": "A noble sprawls over a camp chair, jewelry glittering.", "npc": "noble", "stake": "A noble's favor", "tier": 2 },
+    { "id": "bandit_toll", "title": "Toll Collectors", "desc": "A masked highwayman demands a toll.", "npc": "bandit", "stake": "Your coin purse", "tier": 1 },
+    { "id": "cult_recruiter", "title": "The Whispering Acolyte", "desc": "A hooded figure hums a hymn and offers you a dark invitation.", "npc": "cultist", "stake": "Forbidden knowledge", "tier": 3 },
+    { "id": "lost_scholar", "title": "Lost Scholar", "desc": "A scholar pores over a map, hopelessly lost.", "npc": "scholar", "stake": "Lost lore", "tier": 2 },
+    { "id": "refugee_family", "title": "Refugee Family", "desc": "A family huddles over a dying fire, hungry and afraid.", "npc": "villager", "stake": "Their gratitude", "tier": 1 },
+    { "id": "traveling_priest", "title": "Traveling Priest", "desc": "A priest tends the wounded of a small caravan.", "npc": "priest", "stake": "A blessing", "tier": 2 },
+    { "id": "grumpy_smith", "title": "Grumpy Smith", "desc": "A smith hammers at a portable forge, cursing at the iron.", "npc": "smith", "stake": "A masterwork favor", "tier": 2 }
+  ],
+  "obstacle": [
+    { "id": "locked_chest", "title": "Locked Chest", "desc": "A sturdy iron-bound chest, locked tight.", "skill": "lock", "stake": "Treasure", "tier": 1 },
+    { "id": "collapsed_passage", "title": "Collapsed Passage", "desc": "Rubble blocks the tunnel. Something glitters behind it.", "skill": "force", "stake": "A hidden cache", "tier": 1 },
+    { "id": "rune_door", "title": "Sealed Rune Door", "desc": "A door etched with glowing runes hums as you approach.", "skill": "arcane", "stake": "A sealed vault", "tier": 2 },
+    { "id": "rope_bridge", "title": "Rotten Rope Bridge", "desc": "A frayed bridge spans a chasm.", "skill": "agility", "stake": "The shortcut", "tier": 1 },
+    { "id": "poison_trap", "title": "Pressure-Plate Corridor", "desc": "Suspicious tiles dot the floor ahead; darts line the walls.", "skill": "trap", "stake": "Safe passage", "tier": 1 },
+    { "id": "puzzle_statue", "title": "Riddling Statue", "desc": "A stone sphinx asks a question you barely understand.", "skill": "riddle", "stake": "A guardian's reward", "tier": 2 }
+  ],
+  "choice": [
+    { "id": "shrine_choice", "title": "Forgotten Shrine", "desc": "A cracked shrine radiates strange power. Something has been offered here before.", "stake": "A boon or a curse", "tier": 1 },
+    { "id": "campsite_ruins", "title": "Ruined Camp", "desc": "The remains of a camp: bedrolls, a diary, a half-eaten meal.", "stake": "Clues and supplies", "tier": 1 }
+  ],
+  "lore": [
+    { "id": "murals", "title": "Faded Murals", "desc": "Murals tell a story of the people who once held this place." },
+    { "id": "war_table", "title": "Abandoned War Table", "desc": "Maps and orders lie scattered across a table." },
+    { "id": "diary", "title": "A Dead Man's Diary", "desc": "A diary kept by someone who did not get out." }
+  ],
+  "prisoner": [
+    { "id": "caged_prisoner", "title": "Caged Prisoner", "desc": "A prisoner rattles a cage and whispers for help.", "npc": "villager" }
+  ],
+  "trap": [
+    { "id": "dart_trap", "title": "Dart Gallery", "desc": "A corridor lined with tiny holes." },
+    { "id": "pit_trap", "title": "Spiked Pit", "desc": "The floor is suspiciously clean." }
+  ],
+  "puzzle": [
+    { "id": "rune_puzzle", "title": "Rune Pillars", "desc": "Four pillars with rotating runes. Something must be aligned." }
+  ]
+}

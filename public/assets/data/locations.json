@@ -1,0 +1,29 @@
+{
+  "biomes": {
+    "forest": { "name": "Forest", "bg": "forest", "music": "explore", "hue": 0, "hazard": { "type": "thorns", "dtype": "poison", "dice": "1d4", "color": "#4caf50" }, "surface": "oil", "props": [] },
+    "cave":   { "name": "Cavern", "bg": "cave", "music": "explore", "hue": 0, "hazard": { "type": "acid pool", "dtype": "poison", "dice": "1d6", "color": "#9be564" }, "surface": "water", "props": ["brazier"] },
+    "crypt":  { "name": "Crypt", "bg": "crypt", "music": "explore", "hue": 0, "hazard": { "type": "necrotic mist", "dtype": "necrotic", "dice": "1d6", "color": "#9c36b5" }, "surface": "oil", "props": ["brazier"] },
+    "frost":  { "name": "Frostland", "bg": "frost", "music": "explore", "hue": 0, "hazard": { "type": "thin ice", "dtype": "cold", "dice": "1d6", "color": "#a5f3fc" }, "surface": "water", "props": [] },
+    "ember":  { "name": "Ashlands", "bg": "ember", "music": "explore", "hue": 0, "hazard": { "type": "lava", "dtype": "fire", "dice": "2d6", "color": "#ff5722" }, "surface": "oil", "props": ["brazier"] }
+  },
+  "regions": [
+    { "id": "greenwood", "name": "Greenwood Vale", "level_min": 1, "biome": "forest", "faction": "wardens", "desc": "Rolling woods and the farming village of Redvale. Goblins and bandits stir at the edges.", "pos": [200, 330],
+      "settlement": { "id": "redvale", "name": "Redvale", "pop": 420, "wealth": 45, "safety": 60, "services": ["shop", "smith", "inn", "tavern", "healer", "shrine"] },
+      "dungeons": [ { "id": "dg_goblin_cave", "name": "Gutrot Warren", "template": "goblin_warren" }, { "id": "dg_bandit_camp", "name": "Black Hollow Camp", "template": "bandit_hideout" } ], "neighbors": ["thornwood"] },
+    { "id": "thornwood", "name": "Thornwood", "level_min": 3, "biome": "forest", "faction": "merchants", "desc": "A tangled trade forest where caravans vanish. The Silver Ledger guards its roads.", "pos": [380, 220],
+      "settlement": { "id": "thornhaven", "name": "Thornhaven", "pop": 900, "wealth": 65, "safety": 55, "services": ["shop", "smith", "inn", "tavern", "healer", "shrine"] },
+      "dungeons": [ { "id": "dg_webbed_hollow", "name": "Webbed Hollow", "template": "spider_den" }, { "id": "dg_sunken_chapel", "name": "Sunken Chapel", "template": "haunted_crypt" } ], "neighbors": ["greenwood", "frostpeak"] },
+    { "id": "frostpeak", "name": "Frostpeak Reach", "level_min": 5, "biome": "frost", "faction": "rimeguard", "desc": "Wind-scoured heights under the old Hrimgard Keep.", "pos": [560, 130],
+      "settlement": { "id": "icewatch", "name": "Icewatch", "pop": 300, "wealth": 40, "safety": 50, "services": ["shop", "smith", "inn", "tavern", "healer"] },
+      "dungeons": [ { "id": "dg_hrimgard", "name": "Hrimgard Keep", "template": "frozen_keep" } ], "neighbors": ["thornwood", "ember_wastes"] },
+    { "id": "ember_wastes", "name": "Ember Wastes", "level_min": 8, "biome": "ember", "faction": "cult", "desc": "Volcanic ash and the smoldering Cinder Forge.", "pos": [700, 280],
+      "settlement": { "id": "cinderport", "name": "Cinderport", "pop": 650, "wealth": 70, "safety": 40, "services": ["shop", "smith", "inn", "tavern", "healer", "shrine"] },
+      "dungeons": [ { "id": "dg_cinder_forge", "name": "Cinder Forge", "template": "ember_forge" }, { "id": "dg_ashen_sanctum", "name": "Ashen Sanctum", "template": "cult_sanctum" } ], "neighbors": ["frostpeak", "sunken_crypts"] },
+    { "id": "sunken_crypts", "name": "The Sunken Crypts", "level_min": 11, "biome": "crypt", "faction": "paleCourt", "desc": "A drowned necropolis ruled by the Pale Court.", "pos": [770, 420],
+      "settlement": { "id": "gravewatch", "name": "Gravewatch", "pop": 500, "wealth": 55, "safety": 35, "services": ["shop", "inn", "tavern", "healer", "shrine"] },
+      "dungeons": [ { "id": "dg_pale_vault", "name": "The Pale Vault", "template": "haunted_crypt" } ], "neighbors": ["ember_wastes", "starfall"] },
+    { "id": "starfall", "name": "Starfall Reach", "level_min": 15, "biome": "cave", "faction": "cult", "desc": "Where a star fell and the sky has been wrong ever since.", "pos": [560, 470],
+      "settlement": { "id": "lastlight", "name": "Lastlight", "pop": 250, "wealth": 80, "safety": 45, "services": ["shop", "smith", "inn", "tavern", "healer", "shrine"] },
+      "dungeons": [ { "id": "dg_rift", "name": "The Rift", "template": "rift_gate" } ], "neighbors": ["sunken_crypts"] }
+  ]
+}
