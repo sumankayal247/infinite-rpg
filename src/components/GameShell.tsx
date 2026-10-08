@@ -88,14 +88,30 @@ export default function GameShell() {
   }, []);
 
   const [box, setBox] = useState({ w: "100%", h: "100%" });
+  const [isMobile, setIsMobile] = useState(() => (typeof window !== "undefined" ? window.innerWidth <= 980 : false));
+  useEffect(() => {
+    const update = () => {
+      const mobile = window.innerWidth <= 980;
+      setIsMobile(mobile);
+      if (mobile && ui.drawer) { ui.drawer = false; notify(); }
+    };
+    update();
+    window.addEventListener("resize", update);
+    window.addEventListener("orientationchange", update);
+    return () => { window.removeEventListener("resize", update); window.removeEventListener("orientationchange", update); };
+  }, []);
   useEffect(() => {
     if (!ref.current?.parentElement) return;
     const p = ref.current.parentElement;
     const ro = new ResizeObserver((entries) => {
       const r = entries[0].contentRect;
+      const mobileLandscape = window.innerWidth <= 980 && window.innerWidth > window.innerHeight;
       let w = r.width;
-      let h = w * 9 / 16;
-      if (h > r.height) { h = r.height; w = h * 16 / 9; }
+      let h = r.height;
+      if (!mobileLandscape) {
+        h = w * 9 / 16;
+        if (h > r.height) { h = r.height; w = h * 16 / 9; }
+      }
       const next = { w: w + "px", h: h + "px" };
       setBox(next);
       const canvas = ref.current?.querySelector("canvas");
@@ -123,7 +139,7 @@ export default function GameShell() {
   const lastId = ui.log.length ? ui.log[ui.log.length - 1].id : 0;
   return (
     <div className={`shell ${ui.settings.crt ? "crt" : ""}`} data-border={ui.settings.border}>
-      {game ? <Hud S={S} /> : <div style={{ height: 4, background: "var(--bd)" }} />}
+      {game ? <Hud S={S} isMobile={isMobile} /> : <div style={{ height: 4, background: "var(--bd)" }} />}
       <div className="main" style={game ? undefined : { gridTemplateColumns: "minmax(0,1fr)" }}>
         <div className="stage">
           <div className="cwrap">
@@ -137,7 +153,7 @@ export default function GameShell() {
           </div>
           {ui.screen === "combat" && ui.combat && <ActionBar />}
         </div>
-        {game && <aside className={`side ${ui.drawer ? "open" : ""}`}><div style={{ display: "flex", justifyContent: "flex-end", padding: 4 }} className="hamb"><button className="btn sm" onClick={() => { ui.drawer = false; notify(); }}>✕ Close</button></div><SidePanel /></aside>}
+        {game && <aside className={`side ${ui.drawer ? "open" : ""} ${isMobile ? "mobile" : ""}`}><div style={{ display: "flex", justifyContent: "flex-end", padding: 4 }} className="hamb"><button className="btn sm" onClick={() => { ui.drawer = false; notify(); }}>✕ Close</button></div><SidePanel /></aside>}
       </div>
       <div className="log" ref={logRef} aria-live="polite">
         {ui.log.map((l) => <p key={l.id} className={l.cls}>{l.gm ? <>🎙 <Typed text={l.text} on={ui.settings.typing && l.id === lastId} /></> : l.text}</p>)}
@@ -146,14 +162,13 @@ export default function GameShell() {
   );
 }
 
-function Hud({ S }: { S: any }) {
+function Hud({ S, isMobile }: { S: any; isMobile: boolean }) {
   const p = S.player; const d = deriveStats(p); const cal = calendar(S.hours);
   const cls = D.classMap[p.classId];
   const comb = ui.combat ? unit(ui.combat.cs, "hero") : null;
   const hp = comb ? comb.hp : p.hp; const res = comb ? comb.res : p.res;
   return (
     <div className="hud">
-      <button className="btn sm hamb" aria-label="Open menu" onClick={() => { ui.drawer = !ui.drawer; notify(); }}>☰</button>
       <span className="name">{cls.icon} {p.name} <span className="dim">Lv{p.level}</span></span>
       <Bar v={hp} max={d.maxHp} cls="hp" label={`HP ${hp}/${d.maxHp}`} />
       <Bar v={res} max={d.maxRes} cls="mp" label={`${cls.resource.type} ${Math.floor(res)}/${d.maxRes}`} />
@@ -162,7 +177,12 @@ function Hud({ S }: { S: any }) {
       <span className="dim" style={{ fontSize: ".8em" }}>{cal.label} · {D.regionMap[S.loc.region].name}{wantedIn(S, S.loc.region) ? ` · ⚠${wantedIn(S, S.loc.region)}` : ""}</span>
       {p.points > 0 || p.featPicks > 0 ? <button className="btn sm good" onClick={() => { ui.modal = "levelup"; notify(); }}>★ Level up!</button> : null}
       <span style={{ flex: 1 }} />
-      <button className="btn sm alt" aria-label="Pause" onClick={C.pauseToggle}>⏸</button>
+      <div className="hud-actions">
+        {isMobile && (
+          <button className="btn sm alt menu-btn" aria-label="Open menu" onClick={() => { ui.drawer = !ui.drawer; notify(); }}>☰</button>
+        )}
+        <button className="btn sm alt" aria-label="Pause" onClick={C.pauseToggle}>⏸</button>
+      </div>
     </div>
   );
 }
