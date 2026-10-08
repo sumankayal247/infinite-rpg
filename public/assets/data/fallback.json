@@ -1,0 +1,53 @@
+{
+  "narration": {
+    "success": ["Your gambit lands cleanly; {actor} looks genuinely impressed.", "Everything falls into place. The moment is yours.", "It works better than you dared hope.", "A confident move, and the world bends your way."],
+    "failure": ["It goes wrong. {actor} narrows their eyes.", "The attempt falters, and the moment slips from your grasp.", "Not your finest hour. The consequences begin to gather.", "A stumble. Somewhere, someone takes note."],
+    "crit_success": ["A flawless stroke: even fate seems to applaud.", "It couldn't have gone better if it had been scripted."],
+    "crit_failure": ["Disaster. If there was a wrong way to do it, you found it spectacularly.", "Everything that could go wrong, does."],
+    "combat_start": ["Steel rings and shadows lunge from the dark.", "The air tightens; a fight is unavoidable.", "Weapons are drawn. No one is leaving without a scar."],
+    "victory": ["The last foe falls. Silence returns, ragged breaths and the smell of iron.", "Victory. The echoes of battle fade into the trees."],
+    "defeat": ["Darkness rushes in at the edges of your vision.", "You fall, and the world goes quiet."],
+    "room": {
+      "combat": ["Movement flickers in the gloom ahead.", "You hear whispering and the scrape of steel."],
+      "elite": ["A heavy silence. Whatever waits here is bigger than the rest."],
+      "event": ["Something strange waits in the next chamber."],
+      "treasure": ["A faint glitter catches your eye."],
+      "trap": ["The floor looks wrong. Too clean."],
+      "puzzle": ["The air hums with old, patient magic."],
+      "lore": ["Dust and old words fill this quiet room."],
+      "rest": ["A sheltered corner, warm enough for a fire."],
+      "merchant": ["A lantern swings; a trader hums to himself."],
+      "smith": ["The ring of a hammer on an anvil, impossibly cheerful."],
+      "prisoner": ["A shape moves behind iron bars."],
+      "secret": ["Behind the false wall, a hidden chamber."],
+      "boss": ["The heart of the place. Something old turns to look at you."],
+      "social": ["A figure watches you from the shadows, waiting."],
+      "entrance": ["The entrance yawns before you."]
+    },
+    "travel": ["The road is long, but the world is wide and full of surprises.", "Days pass beneath shifting skies."],
+    "rest": ["The fire crackles. For a while, the world is small and warm.", "You sleep, and the dreams are only mildly cursed."],
+    "hallucination": ["The trees melt into rippling rainbows and the enemy's face keeps changing.", "The ground sings. Everything is slightly too bright."],
+    "ability": ["{actor} unleashes {action} in a burst of colour.", "{actor} channels {action} with practised ease."],
+    "kill": ["{target} collapses and does not rise.", "{target} crumples, their story ended."]
+  },
+  "enemy_flavor": {
+    "beast": ["Slobbering and starving.", "Matted fur and amber eyes."],
+    "goblin": ["Cackling and covered in stolen jewelry.", "A rusty blade and a rustier temper."],
+    "bandit": ["A snarl behind a scarf.", "Scarred knuckles and a hungry grin."],
+    "undead": ["Dust and cold fire in empty sockets.", "It remembers being alive, and resents you."],
+    "spider": ["Legs ticking on stone.", "Fangs dripping green."],
+    "cult": ["Murmuring prayers to something deeper.", "Eyes that never blink."],
+    "elemental": ["A restless shape of living energy.", "It crackles with impatience."],
+    "ooze": ["It quivers hungrily.", "Slowly dissolving the floor."],
+    "construct": ["Gears and grit and zero mercy.", "It does not tire."],
+    "rift": ["A rip in reality wearing a shape.", "Its outline refuses to stay still."],
+    "default": ["A dangerous foe blocks your path."]
+  },
+  "themes": ["fire", "ice", "poison", "shadow", "holy", "storm", "blood", "neutral"],
+  "rumors": ["Folk say the old road is haunted after dark.", "A trader swears he saw a goblin wearing a crown of spoons.", "Someone is paying handsomely for bandit ears.", "The Guild is hiding something about the missing caravans.", "A star fell in the south. Folk there aren't sleeping well."],
+  "encounters": [
+    { "name": "Moss-Backed Wolf", "desc": "A wolf with moss-slick fur pads from the undergrowth.", "visual_theme": "poison", "is_hostile": true },
+    { "name": "Crystal Spider", "desc": "A jagged spider that chimes as it moves.", "visual_theme": "ice", "is_hostile": true },
+    { "name": "Ember Hound", "desc": "Smoke curls from its snarling jaws.", "visual_theme": "fire", "is_hostile": true }
+  ]
+}

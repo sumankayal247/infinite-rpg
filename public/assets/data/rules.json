@@ -1,0 +1,51 @@
+{
+  "min_damage_on_hit": 1,
+  "crit_range": 20,
+  "xp_base": 30,
+  "points_per_level": 2,
+  "attr_cap": 20,
+  "max_level": 60,
+  "base_ac": 10,
+  "base_speed": 5,
+  "death_save_dc": 10,
+  "max_wanted": 5,
+  "rep_min": -100,
+  "rep_max": 100,
+  "gold_cap": 999999,
+  "dc": { "trivial": 6, "easy": 9, "normal": 12, "hard": 15, "very_hard": 18, "heroic": 21 },
+  "risk_dc": { "low": 10, "medium": 13, "high": 16, "extreme": 19 },
+  "freeform_modifiers": {
+    "discovered_weakness": -4,
+    "prepared": -3,
+    "clever": -2,
+    "reckless": 2,
+    "hasty": 2,
+    "environment_advantage": "advantage",
+    "hostile_environment": "disadvantage",
+    "max_total_bonus": -6
+  },
+  "hours": { "combat": 2, "event": 1, "camp": 8, "room": 1, "shop": 1, "travel_per_region": 24, "freeform": 1 },
+  "enemy_scale": { "hp": 0.22, "atk": 0.5, "dmg": 0.34, "ac": 0.2, "xp": 0.5 },
+  "price": { "sell_ratio": 0.4, "repair_per_dur": 2, "upgrade_base": 60, "upgrade_mult": 1.7, "max_upgrade": 5, "respec_base": 40, "resurrect_base": 120, "rest_inn": 12, "heal_wound": 60 },
+  "damage_types": ["physical", "slash", "pierce", "blunt", "fire", "cold", "lightning", "poison", "necrotic", "holy", "arcane"],
+  "death_modes": { "normal": "Downed heroes may be resurrected for a price.", "hardcore": "Death is permanent. The run ends.", "legacy": "Death ends the hero; an heir inherits part of your legend." },
+  "wounds": [
+    { "id": "broken_arm", "name": "Broken Arm", "desc": "-2 to attack rolls.", "atk": -2 },
+    { "id": "concussion", "name": "Concussion", "desc": "-1 AC and initiative.", "ac": -1, "init": -2 },
+    { "id": "scarred", "name": "Scarred", "desc": "-2 CHA checks, but intimidating (+2 Intimidate).", "cha": -2 },
+    { "id": "burned", "name": "Burned", "desc": "-4 max HP until healed.", "hp": -4 },
+    { "id": "exhausted", "name": "Exhausted", "desc": "-1 speed, -1 to all checks.", "check": -1 }
+  ],
+  "achievements": [
+    { "id": "first_blood", "name": "First Blood", "desc": "Win a battle.", "shards": 2 },
+    { "id": "crit_master", "name": "Natural Twenty", "desc": "Land a critical hit.", "shards": 2 },
+    { "id": "delver", "name": "Delver", "desc": "Clear a dungeon.", "shards": 5 },
+    { "id": "silver_tongue", "name": "Silver Tongue", "desc": "Win 5 social checks.", "shards": 4 },
+    { "id": "sticky_fingers", "name": "Sticky Fingers", "desc": "Steal successfully.", "shards": 3 },
+    { "id": "survivor", "name": "Back From The Brink", "desc": "Revive from the downed state.", "shards": 3 },
+    { "id": "veteran", "name": "Veteran", "desc": "Reach level 5.", "shards": 5 },
+    { "id": "legend", "name": "Living Legend", "desc": "Reach level 10.", "shards": 10 },
+    { "id": "centurion", "name": "Centurion", "desc": "Survive 100 in-game days.", "shards": 8 },
+    { "id": "slayer", "name": "Monster Hunter", "desc": "Defeat 50 enemies in total.", "shards": 6 }
+  ]
+}

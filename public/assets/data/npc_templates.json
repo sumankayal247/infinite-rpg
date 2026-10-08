@@ -1,0 +1,22 @@
+{
+  "names": ["Aldric", "Brynn", "Corwin", "Dessa", "Edda", "Fenn", "Garrick", "Hilde", "Ivo", "Jessa", "Kael", "Lorna", "Marek", "Nessa", "Orla", "Pike", "Quill", "Rowan", "Sable", "Tobin", "Una", "Vex", "Wynn", "Yara", "Zeb", "Marta", "Osric", "Petra"],
+  "races": ["Human", "Human", "Human", "Dwarf", "Elf", "Halfling", "Half-orc", "Gnome"],
+  "templates": {
+    "merchant": { "occupation": "Merchant", "greed": [55, 90], "loyalty": [20, 60], "fear": [30, 70], "corruption": [30, 70], "traits": ["shrewd", "chatty", "wary"], "goals": ["Become wealthy"], "fears": ["bandits", "bankruptcy"], "values": ["profit", "fair deals"], "faction": "merchants" },
+    "guard": { "occupation": "Town Guard", "greed": [20, 70], "loyalty": [50, 90], "fear": [20, 50], "corruption": [10, 60], "traits": ["dutiful", "suspicious"], "goals": ["Reduce crime"], "fears": ["dishonor"], "values": ["order", "duty"], "faction": "wardens" },
+    "noble": { "occupation": "Minor Noble", "greed": [50, 95], "loyalty": [10, 50], "fear": [30, 80], "corruption": [40, 90], "traits": ["vain", "scheming"], "goals": ["Gain political power"], "fears": ["scandal"], "values": ["status", "legacy"], "faction": "merchants" },
+    "bandit": { "occupation": "Highwayman", "greed": [50, 90], "loyalty": [30, 80], "fear": [20, 60], "corruption": [60, 95], "traits": ["menacing", "pragmatic"], "goals": ["Control the trade route"], "fears": ["the gallows"], "values": ["strength", "coin"], "faction": "bandits" },
+    "villager": { "occupation": "Villager", "greed": [10, 40], "loyalty": [40, 80], "fear": [50, 90], "corruption": [5, 35], "traits": ["kind", "frightened", "stubborn"], "goals": ["Keep my family safe"], "fears": ["raiders"], "values": ["family", "peace"], "faction": "wardens" },
+    "scholar": { "occupation": "Wandering Scholar", "greed": [20, 60], "loyalty": [30, 70], "fear": [40, 70], "corruption": [10, 40], "traits": ["curious", "absent-minded"], "goals": ["Uncover forgotten history"], "fears": ["ignorance"], "values": ["knowledge"], "faction": "wardens" },
+    "priest": { "occupation": "Priest", "greed": [5, 35], "loyalty": [60, 95], "fear": [30, 60], "corruption": [5, 30], "traits": ["gentle", "firm"], "goals": ["Heal the sick"], "fears": ["despair"], "values": ["mercy", "faith"], "faction": "wardens" },
+    "cultist": { "occupation": "Ashen Acolyte", "greed": [20, 50], "loyalty": [70, 100], "fear": [10, 40], "corruption": [30, 70], "traits": ["zealous", "eerie"], "goals": ["Awaken the sleeper"], "fears": ["silence"], "values": ["devotion"], "faction": "cult" },
+    "smith": { "occupation": "Blacksmith", "greed": [30, 60], "loyalty": [50, 80], "fear": [30, 60], "corruption": [10, 40], "traits": ["gruff", "proud"], "goals": ["Forge a masterwork"], "fears": ["a cold forge"], "values": ["craft"], "faction": "merchants" },
+    "scout": { "occupation": "Wounded Scout", "greed": [20, 50], "loyalty": [50, 90], "fear": [30, 60], "corruption": [10, 40], "traits": ["tired", "brave"], "goals": ["Report to the Wardens"], "fears": ["being left behind"], "values": ["duty"], "faction": "wardens" }
+  },
+  "companions": [
+    { "id": "mira", "name": "Mira Thornfield", "class": "ranger", "race": "Elf", "traits": ["wry", "independent"], "goal": "Find her missing brother Tam", "likes": ["mercy", "nature", "honesty"], "dislikes": ["theft", "cruelty"], "fears": ["fire"], "secret": "She knows who took Tam: the Black Hollow Gang.", "quest": "Find Tam", "level_bonus": 0 },
+    { "id": "tomas", "name": "Brother Tomas", "class": "cleric", "race": "Human", "traits": ["gentle", "stubborn"], "goal": "Atone for a failed rescue", "likes": ["mercy", "faith", "charity"], "dislikes": ["violence for fun", "bribery"], "fears": ["the dark"], "secret": "He once abandoned a village to its fate.", "quest": "Atonement", "level_bonus": 0 },
+    { "id": "zed", "name": "Zed the Quick", "class": "rogue", "race": "Halfling", "traits": ["cheeky", "loyal"], "goal": "Pay off a debt to the Silver Ledger", "likes": ["gold", "cleverness", "theft"], "dislikes": ["pious sermons", "guards"], "fears": ["debt collectors"], "secret": "He stole from the Guildmaster.", "quest": "The Debt", "level_bonus": 0 },
+    { "id": "korga", "name": "Korga Ironhide", "class": "warrior", "race": "Half-orc", "traits": ["blunt", "honorable"], "goal": "Win back her clan's honor", "likes": ["courage", "honor", "strength"], "dislikes": ["cowardice", "lies"], "fears": ["being forgotten"], "secret": "Her clan was exiled for a crime she committed.", "quest": "Clan's Honor", "level_bonus": 0 }
+  ]
+}

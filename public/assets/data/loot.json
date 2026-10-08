@@ -1,0 +1,28 @@
+{
+  "tables": {
+    "none": { "gold": [0, 0], "drops": [] },
+    "beast": { "gold": [0, 3], "drops": [{ "id": "leather_scraps", "chance": 0.5, "qty": [1, 2] }] },
+    "humanoid": { "gold": [4, 12], "drops": [{ "id": "health_potion", "chance": 0.12, "qty": [1, 1] }, { "id": "iron_ore", "chance": 0.3, "qty": [1, 2] }], "gear_chance": 0.04 },
+    "undead": { "gold": [2, 9], "drops": [{ "id": "iron_ore", "chance": 0.25, "qty": [1, 2] }, { "id": "antidote", "chance": 0.1, "qty": [1, 1] }], "gear_chance": 0.04 },
+    "ooze": { "gold": [0, 4], "drops": [{ "id": "mystic_dust", "chance": 0.08, "qty": [1, 1] }, { "id": "antidote", "chance": 0.12, "qty": [1, 1] }] },
+    "construct": { "gold": [5, 14], "drops": [{ "id": "iron_ore", "chance": 0.8, "qty": [2, 4] }] },
+    "cult": { "gold": [6, 16], "drops": [{ "id": "mystic_dust", "chance": 0.22, "qty": [1, 1] }, { "id": "mana_potion", "chance": 0.15, "qty": [1, 1] }], "gear_chance": 0.05 },
+    "boss_1": { "gold": [60, 110], "drops": [{ "id": "greater_health", "chance": 0.6, "qty": [1, 1] }, { "id": "iron_ore", "chance": 1, "qty": [3, 5] }], "gear_chance": 0.7, "gear_tier": 2 },
+    "boss_2": { "gold": [110, 180], "drops": [{ "id": "greater_health", "chance": 0.7, "qty": [1, 2] }, { "id": "mystic_dust", "chance": 0.8, "qty": [1, 2] }], "gear_chance": 0.8, "gear_tier": 2 },
+    "boss_3": { "gold": [180, 300], "drops": [{ "id": "greater_health", "chance": 1, "qty": [1, 2] }, { "id": "mystic_dust", "chance": 1, "qty": [2, 3] }], "gear_chance": 0.9, "gear_tier": 3 },
+    "boss_4": { "gold": [300, 520], "drops": [{ "id": "supreme_health", "chance": 0.7, "qty": [1, 1] }, { "id": "mystic_dust", "chance": 1, "qty": [2, 4] }, { "id": "phoenix_feather", "chance": 0.25, "qty": [1, 1] }], "gear_chance": 1, "gear_tier": 4 },
+    "boss_5": { "gold": [600, 1000], "drops": [{ "id": "supreme_health", "chance": 1, "qty": [1, 2] }, { "id": "phoenix_feather", "chance": 0.5, "qty": [1, 1] }], "gear_chance": 1, "gear_tier": 5 },
+    "chest_1": { "gold": [20, 50], "drops": [{ "id": "health_potion", "chance": 0.6, "qty": [1, 2] }, { "id": "mana_potion", "chance": 0.3, "qty": [1, 1] }, { "id": "iron_ore", "chance": 0.5, "qty": [2, 3] }], "gear_chance": 0.3, "gear_tier": 1 },
+    "chest_2": { "gold": [50, 110], "drops": [{ "id": "greater_health", "chance": 0.5, "qty": [1, 1] }, { "id": "fire_flask", "chance": 0.4, "qty": [1, 2] }, { "id": "iron_ore", "chance": 0.6, "qty": [2, 4] }], "gear_chance": 0.4, "gear_tier": 2 },
+    "chest_3": { "gold": [110, 240], "drops": [{ "id": "greater_health", "chance": 0.7, "qty": [1, 2] }, { "id": "mystic_dust", "chance": 0.6, "qty": [1, 2] }], "gear_chance": 0.5, "gear_tier": 3 },
+    "chest_4": { "gold": [240, 480], "drops": [{ "id": "supreme_health", "chance": 0.5, "qty": [1, 1] }, { "id": "mystic_dust", "chance": 0.8, "qty": [2, 3] }], "gear_chance": 0.6, "gear_tier": 4 },
+    "chest_5": { "gold": [480, 900], "drops": [{ "id": "supreme_health", "chance": 0.8, "qty": [1, 2] }, { "id": "phoenix_feather", "chance": 0.15, "qty": [1, 1] }], "gear_chance": 0.7, "gear_tier": 5 }
+  },
+  "shop_stock": {
+    "1": ["health_potion", "mana_potion", "antidote", "fire_flask", "iron_sword", "dagger", "oak_staff", "mace", "hunting_bow", "warhammer", "cloth_robe", "leather_armor", "chain_shirt"],
+    "2": ["greater_health", "giant_strength", "steel_sword", "greataxe", "longbow", "studded_leather", "chain_mail", "ring_of_vigor", "thorn_amulet", "lucky_coin", "hallucination_potion"],
+    "3": ["splint_mail", "regen_band", "ember_charm", "frost_charm", "sacred_sigil", "flame_tongue", "frost_brand", "stormcaller_staff", "vampiric_blade"],
+    "4": ["supreme_health", "plate_armor"],
+    "5": ["mythril_mail", "voidreaver"]
+  }
+}

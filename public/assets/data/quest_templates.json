@@ -1,0 +1,50 @@
+{
+  "quests": [
+    { "id": "bounty", "kind": "kill", "title": "Bounty: Thin the {family}", "desc": "{giver} wants {count} {family} foes put down near {region}.", "count": [3, 6], "reward": { "gold": [40, 80], "xp": 40, "rep": 8 }, "deadline": 14 },
+    { "id": "clear", "kind": "clear", "title": "Clear {dungeon}", "desc": "{giver} begs you to drive the {faction} out of {dungeon} before they spread.", "reward": { "gold": [80, 140], "xp": 80, "rep": 12 }, "deadline": 20 },
+    { "id": "scout", "kind": "visit", "room": "lore", "title": "Scout {dungeon}", "desc": "{giver} needs eyes inside {dungeon}. Find a lore chamber and learn what the {faction} are planning.", "reward": { "gold": [50, 90], "xp": 50, "rep": 6 }, "deadline": 16 },
+    { "id": "rescue", "kind": "visit", "room": "prisoner", "title": "Rescue in {dungeon}", "desc": "A relative of {giver} was taken into {dungeon}. Find the prisoner.", "reward": { "gold": [60, 110], "xp": 70, "rep": 14 }, "deadline": 12 },
+    { "id": "gather", "kind": "gather", "item": "iron_ore", "title": "Ore for the Forge", "desc": "{giver} needs {count} Iron Ore for the settlement's smith.", "count": [4, 8], "reward": { "gold": [40, 70], "xp": 25, "rep": 5 }, "deadline": 20 }
+  ],
+  "world_events": [
+    { "id": "bandit_raid", "name": "Bandit Raid", "type": "faction_conflict", "faction": "bandits", "target": "wardens", "delay": [5, 10], "chain": [
+      { "after": 1, "region": { "prosperity": -8 }, "msg": "The raiders strip the village stores." },
+      { "after": 3, "region": { "prosperity": -8, "stability": -6, "crime": 6 }, "msg": "The village is impoverished." },
+      { "after": 8, "region": { "population": -4 }, "spawn": "refugees", "msg": "Refugees stream toward the neighboring city." } ], "prevent": "clear:bandits" },
+    { "id": "goblin_war", "name": "Goblin War", "type": "faction_conflict", "faction": "goblins", "target": "wardens", "delay": [8, 14], "chain": [
+      { "after": 2, "region": { "danger": 10, "stability": -5 }, "msg": "Goblin war drums echo through the woods." },
+      { "after": 6, "region": { "danger": 10, "prosperity": -6 }, "faction": { "goblins": { "military": 8 } }, "msg": "The clans overrun a watchtower." } ], "prevent": "clear:goblins" },
+    { "id": "caravan_ambush", "name": "Caravan Ambush", "type": "trade_disruption", "faction": "bandits", "target": "merchants", "delay": [4, 9], "chain": [
+      { "after": 1, "region": { "prosperity": -5 }, "price": 0.1, "msg": "A merchant caravan is lost; prices rise." },
+      { "after": 4, "region": { "crime": 8 }, "spawn": "crime_wave", "msg": "Smugglers profit from the shortage." } ], "prevent": "clear:bandits" },
+    { "id": "crime_wave", "name": "Crime Wave", "type": "social", "faction": "bandits", "target": "wardens", "delay": [2, 4], "chain": [
+      { "after": 1, "region": { "crime": 10, "stability": -4 }, "msg": "Pickpockets and burglars swarm the market." },
+      { "after": 5, "region": { "crime": -6, "danger": -3 }, "faction": { "wardens": { "military": 4 } }, "msg": "The Wardens double their patrols." } ], "prevent": "" },
+    { "id": "refugees", "name": "Refugee Wave", "type": "social", "faction": "wardens", "target": "wardens", "delay": [1, 3], "chain": [
+      { "after": 1, "region": { "population": 3, "prosperity": -3 }, "msg": "Refugees crowd the nearby town." },
+      { "after": 5, "region": { "crime": 4 }, "msg": "Tension grows between locals and newcomers." } ], "prevent": "" },
+    { "id": "plague", "name": "Wasting Sickness", "type": "disaster", "faction": "wildlife", "target": "wardens", "delay": [10, 20], "chain": [
+      { "after": 1, "region": { "population": -5, "prosperity": -4 }, "msg": "Sickness spreads through the settlement." },
+      { "after": 6, "region": { "population": -4, "stability": -5 }, "msg": "The healers are overwhelmed." } ], "prevent": "" },
+    { "id": "festival", "name": "Harvest Festival", "type": "celebration", "faction": "wardens", "target": "wardens", "delay": [6, 12], "chain": [
+      { "after": 0, "region": { "prosperity": 8, "stability": 6 }, "price": -0.1, "msg": "A festival fills the streets with joy and cheap ale." } ], "prevent": "" },
+    { "id": "trade_boom", "name": "Trade Boom", "type": "economy", "faction": "merchants", "target": "merchants", "delay": [6, 14], "chain": [
+      { "after": 0, "region": { "prosperity": 10 }, "faction": { "merchants": { "wealth": 6 } }, "msg": "New trade routes open and coin flows freely." } ], "prevent": "" },
+    { "id": "cult_ritual", "name": "Ashen Ritual", "type": "faction_conflict", "faction": "cult", "target": "rimeguard", "delay": [10, 18], "chain": [
+      { "after": 2, "region": { "danger": 12, "stability": -6 }, "msg": "The sky blackens above the Ashen Choir's chapel." },
+      { "after": 7, "region": { "danger": 14 }, "faction": { "cult": { "military": 8 } }, "msg": "The ritual completes; ash-wights walk the roads." } ], "prevent": "clear:cult" }
+  ],
+  "threads": [
+    { "id": "thr_missing", "title": "The Missing Villagers", "region": "greenwood", "factions": ["bandits"], "pressure": 28, "importance": 3, "scale": "LOCAL", "known": ["Redvale's farmers keep vanishing on the road."], "unknown": ["Who is taking them?", "Where are they held?"], "next": ["A prisoner is spotted at Black Hollow Camp.", "The Gang demands ransom."], "link_dungeon": "dg_bandit_camp" },
+    { "id": "thr_goblin", "title": "The Goblin War", "region": "greenwood", "factions": ["goblins", "wardens"], "pressure": 22, "importance": 3, "scale": "LOCAL", "known": ["Goblins raid outlying farms."], "unknown": ["Who united the clans?"], "next": ["A goblin king claims the Warren.", "The clans march on Redvale."], "link_dungeon": "dg_goblin_cave" },
+    { "id": "thr_guild", "title": "Merchant Guild Conflict", "region": "thornwood", "factions": ["merchants", "bandits"], "pressure": 18, "importance": 2, "scale": "REGIONAL", "known": ["Caravans vanish on the Thornwood road."], "unknown": ["Is someone inside the Guild selling routes?"], "next": ["A guild clerk is found dead.", "The Guild hires mercenaries."] },
+    { "id": "thr_artifact", "title": "The Ashen Relic", "region": "ember_wastes", "factions": ["cult"], "pressure": 10, "importance": 4, "scale": "NATIONAL", "known": ["Cultists dig beneath the Cinder Forge."], "unknown": ["What is buried there?"], "next": ["The Choir sings a new hymn.", "The relic stirs."] },
+    { "id": "thr_succession", "title": "The Warden Succession", "region": "greenwood", "factions": ["wardens", "merchants"], "pressure": 14, "importance": 2, "scale": "REGIONAL", "known": ["Captain Voss is ailing."], "unknown": ["Who will inherit command?"], "next": ["Two candidates court the Guild.", "Poison is suspected."] }
+  ],
+  "scales": ["LOCAL", "REGIONAL", "NATIONAL", "KINGDOM", "CONTINENTAL", "MYTHIC"],
+  "rumor_templates": [
+    "They say a stranger {act} near {place}.",
+    "I heard from a traveler that someone {act} at {place}.",
+    "The tavern's buzzing: a hero {act} around {place}."
+  ]
+}
