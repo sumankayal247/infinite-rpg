@@ -463,7 +463,11 @@ export function victoryContinue() {
   ui.victory = null; ui.modal = null;
   const cb = afterFight; afterFight = null;
   ui.screen = S.loc.kind === "dungeon" ? "dungeon" : "town";
-  stage.scene(S.loc.kind === "dungeon" ? "map" : "backdrop", { dungeonId: S.loc.dungeon, bg: D.biomes[D.regionMap[S.loc.region].biome].bg });
+  if (S.loc.kind === "dungeon" && S.dungeons[S.loc.dungeon ?? ""]?.nodes?.length) {
+    stage.scene("map", { dungeonId: S.loc.dungeon, bg: D.biomes[D.regionMap[S.loc.region].biome].bg });
+  } else {
+    stage.scene("backdrop", { bg: D.biomes[D.regionMap[S.loc.region].biome].bg });
+  }
   music("explore");
   ui.combat = null;
   if (pendingChoices(S.player).length) { ui.modal = "levelup"; }

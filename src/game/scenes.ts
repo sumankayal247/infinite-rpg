@@ -109,7 +109,8 @@ class MapS extends Phaser.Scene {
   private resolveDungeon(dungeonId?: string) {
     const S = getS();
     const id = dungeonId ?? S?.loc?.dungeon ?? this.d?.id ?? "";
-    return S?.dungeons?.[id] ?? null;
+    if (!id || !S?.dungeons?.[id]) return null;
+    return S.dungeons[id];
   }
   init(d: any) {
     this.d = this.resolveDungeon(d?.dungeonId);
@@ -117,13 +118,13 @@ class MapS extends Phaser.Scene {
   }
   create() {
     const currentDungeon = this.resolveDungeon();
-    if (!currentDungeon) {
+    if (!currentDungeon || !currentDungeon.nodes?.length) {
       const fallbackBg = D.biomes[D.regionMap[getS()?.loc?.region ?? "greenwood"]?.biome ?? "forest"].bg;
       addBg(this, fallbackBg, 0.5);
       this.hint = this.add.text(W / 2, H / 2, "Loading map…", ts(18, "#e8e1ff")).setOrigin(0.5).setDepth(10);
       this.time.delayedCall(160, () => {
         const retry = this.resolveDungeon();
-        if (this.sys?.isActive() && retry) {
+        if (this.sys?.isActive() && retry && retry.nodes?.length) {
           this.d = retry;
           this.scene.restart({ dungeonId: retry.id });
         }
@@ -150,7 +151,17 @@ class MapS extends Phaser.Scene {
   draw() {
     const liveDungeon = this.resolveDungeon(this.d?.id ?? getS()?.loc?.dungeon ?? undefined);
     this.d = liveDungeon ?? this.d ?? null;
-    if (!this.d) return;
+    if (!this.d || !this.d.nodes?.length) {
+      if (this.hint) this.hint.setText("Loading map…");
+      this.time.delayedCall(80, () => {
+        const retry = this.resolveDungeon();
+        if (this.sys?.isActive() && retry && retry.nodes?.length) {
+          this.d = retry;
+          this.scene.restart({ dungeonId: retry.id });
+        }
+      });
+      return;
+    }
     if (!this.layer) this.layer = this.add.container(0, 0).setDepth(5);
     this.clearLayer();
     const d = this.d;
