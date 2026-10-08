@@ -115,6 +115,7 @@ class MapS extends Phaser.Scene {
   init(d: any) {
     this.d = this.resolveDungeon(d?.dungeonId);
     this.sel = 0;
+    if (this.layer) { this.clearLayer(); this.layer.destroy(); this.layer = null; }
   }
   create() {
     const currentDungeon = this.resolveDungeon();
@@ -144,6 +145,7 @@ class MapS extends Phaser.Scene {
   }
   later() { this.time.delayedCall(0, () => { if (this.sys && this.sys.isActive()) this.draw(); }); }
   clearLayer() {
+    if (!this.layer || !this.layer.list) return;
     const kill = (o: any) => { this.tweens.killTweensOf(o); if (o.list) o.list.forEach(kill); };
     this.layer.list.forEach(kill);
     this.layer.removeAll(true);
@@ -162,8 +164,8 @@ class MapS extends Phaser.Scene {
       });
       return;
     }
-    if (!this.layer) this.layer = this.add.container(0, 0).setDepth(5);
-    this.clearLayer();
+    if (this.layer) { this.clearLayer(); this.layer.destroy(); }
+    this.layer = this.add.container(0, 0).setDepth(5);
     const d = this.d;
     this.reach = reachable(d);
     if (this.sel >= this.reach.length) this.sel = 0;
